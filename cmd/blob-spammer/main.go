@@ -124,7 +124,7 @@ func main() {
 		panic(err)
 	}
 
-	err = scenario.Run(tester)
+	err = scenario.Run()
 	if err != nil {
 		panic(err)
 	}

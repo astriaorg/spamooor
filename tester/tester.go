@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethpandaops/goomy-blob/scenarios/univ2tx/contracts"
 	"math/big"
 	"math/rand"
 	"sync"
@@ -173,53 +171,6 @@ func (tester *Tester) GetWallet(mode SelectionMode, input int) *txbuilder.Wallet
 
 func (tester *Tester) GetRootWallet() *txbuilder.Wallet {
 	return tester.rootWallet
-}
-
-func (tester *Tester) DeployWethContract() (*univ3tx.Weth, common.Address, error) {
-	client := tester.GetClient(SelectByIndex, 0)
-	wallet := tester.GetRootWallet()
-
-	transactor, err := tester.GetWalletTransactor(wallet, false, nil)
-	if err != nil {
-		tester.logger.Warnf("could not get transactor: %v", err)
-		return nil, common.Address{}, err
-	}
-
-	contractAddress, _, weth, err := univ3tx.DeployWeth(transactor, client.GetEthClient())
-	if err != nil {
-		tester.logger.Warnf("could not deploy WETH contract: %v", err)
-		return nil, common.Address{}, err
-	}
-
-	tester.logger.Infof("deployed WETH contract at %v", contractAddress.String())
-
-	return weth, contractAddress, nil
-}
-
-func (tester *Tester) DeployDaiContract() (*univ3tx.Dai, common.Address, error) {
-	client := tester.GetClient(SelectByIndex, 0)
-	wallet := tester.GetRootWallet()
-
-	transactor, err := tester.GetWalletTransactor(wallet, false, nil)
-	if err != nil {
-		tester.logger.Warnf("could not get transactor: %v", err)
-		return nil, common.Address{}, err
-	}
-
-	chainId, err := client.GetChainId()
-	if err != nil {
-		return nil, common.Address{}, err
-	}
-
-	contractAddress, _, dai, err := univ3tx.DeployDai(transactor, client.GetEthClient(), chainId)
-	if err != nil {
-		tester.logger.Warnf("could not deploy DAI contract: %v", err)
-		return nil, common.Address{}, err
-	}
-
-	tester.logger.Infof("deployed DAI contract at %v", contractAddress.String())
-
-	return dai, contractAddress, nil
 }
 
 func (tester *Tester) GetWalletTransactor(wallet *txbuilder.Wallet, noSend bool, value *big.Int) (*bind.TransactOpts, error) {

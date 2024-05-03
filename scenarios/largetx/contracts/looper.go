@@ -32,11 +32,33 @@ var (
 // LooperMetaData contains all meta data concerning the Looper contract.
 var LooperMetaData = &bind.MetaData{
 	ABI: "[{\"type\":\"function\",\"name\":\"loop_it\",\"inputs\":[{\"name\":\"no_of_times_to_loop\",\"type\":\"uint64\",\"internalType\":\"uint64\"}],\"outputs\":[{\"name\":\"\",\"type\":\"uint256[]\",\"internalType\":\"uint256[]\"}],\"stateMutability\":\"nonpayable\"}]",
+	Bin: "0x608060405234801561001057600080fd5b506101c5806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80638f491c6514610030575b600080fd5b61004361003e3660046100ee565b610059565b604051610050919061011f565b60405180910390f35b606060008267ffffffffffffffff1667ffffffffffffffff81111561008057610080610163565b6040519080825280602002602001820160405280156100a9578160200160208202803683370190505b50905060005b8367ffffffffffffffff168110156100e757808282815181106100d4576100d4610179565b60209081029190910101526001016100af565b5092915050565b60006020828403121561010057600080fd5b813567ffffffffffffffff8116811461011857600080fd5b9392505050565b6020808252825182820181905260009190848201906040850190845b818110156101575783518352928401929184019160010161013b565b50909695505050505050565b634e487b7160e01b600052604160045260246000fd5b634e487b7160e01b600052603260045260246000fdfea2646970667358221220b226884699e16cc47ae01a4cc201e790347695464df17edde46bbab26872400364736f6c63430008180033",
 }
 
 // LooperABI is the input ABI used to generate the binding from.
 // Deprecated: Use LooperMetaData.ABI instead.
 var LooperABI = LooperMetaData.ABI
+
+// LooperBin is the compiled bytecode used for deploying new contracts.
+// Deprecated: Use LooperMetaData.Bin instead.
+var LooperBin = LooperMetaData.Bin
+
+// DeployLooper deploys a new Ethereum contract, binding an instance of Looper to it.
+func DeployLooper(auth *bind.TransactOpts, backend bind.ContractBackend) (common.Address, *types.Transaction, *Looper, error) {
+	parsed, err := LooperMetaData.GetAbi()
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	if parsed == nil {
+		return common.Address{}, nil, nil, errors.New("GetABI returned nil")
+	}
+
+	address, tx, contract, err := bind.DeployContract(auth, *parsed, common.FromHex(LooperBin), backend)
+	if err != nil {
+		return common.Address{}, nil, nil, err
+	}
+	return address, tx, &Looper{LooperCaller: LooperCaller{contract: contract}, LooperTransactor: LooperTransactor{contract: contract}, LooperFilterer: LooperFilterer{contract: contract}}, nil
+}
 
 // Looper is an auto generated Go binding around an Ethereum contract.
 type Looper struct {

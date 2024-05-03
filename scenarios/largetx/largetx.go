@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	largetx "github.com/ethpandaops/goomy-blob/scenarios/largetx/abis"
+	largetx "github.com/ethpandaops/goomy-blob/scenarios/largetx/contracts"
 	"github.com/ethpandaops/goomy-blob/utils"
 	"math/big"
 	"os"
@@ -39,8 +39,8 @@ type Scenario struct {
 	logger  *logrus.Entry
 	tester  *tester.Tester
 
-	contractAddr common.Address
-	loopCount    uint64
+	looperContractAddr common.Address
+	loopCount          uint64
 
 	pendingCount  uint64
 	pendingChan   chan bool
@@ -96,13 +96,23 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 	return nil
 }
 
-// TODO - move contract deployment here
 func (s *Scenario) Setup(testerCfg *tester.Tester) error {
+	s.logger.Infof("setting up scenario: largetx")
+	s.tester = testerCfg
+	s.logger.Infof("deploying looper contract...")
+	receipt, _, err := s.DeployLooperContract()
+	if err != nil {
+		return err
+	}
+
+	s.looperContractAddr = receipt.ContractAddress
+
+	s.logger.Infof("deployed looper contract at %v", s.looperContractAddr.String())
+
 	return nil
 }
 
-func (s *Scenario) Run(tester *tester.Tester) error {
-	s.tester = tester
+func (s *Scenario) Run() error {
 	txIdxCounter := uint64(0)
 	counterMutex := sync.Mutex{}
 	waitGroup := sync.WaitGroup{}
@@ -111,15 +121,6 @@ func (s *Scenario) Run(tester *tester.Tester) error {
 	startTime := time.Now()
 
 	s.logger.Infof("starting scenario: largetx")
-	s.logger.Infof("deploying looper contract...")
-	receipt, _, err := s.DeployLooperContract()
-	if err != nil {
-		return err
-	}
-
-	s.contractAddr = receipt.ContractAddress
-
-	s.logger.Infof("deployed looper contract at %v", s.contractAddr.String())
 
 	for {
 		txIdx := txIdxCounter
@@ -179,59 +180,23 @@ func (s *Scenario) Run(tester *tester.Tester) error {
 }
 
 func (s *Scenario) DeployLooperContract() (*types.Receipt, *txbuilder.Client, error) {
+	wallet := s.tester.GetRootWallet()
 	client := s.tester.GetClient(tester.SelectByIndex, 0)
-	wallet := s.tester.GetWallet(tester.SelectByIndex, 0)
 
-	var feeCap *big.Int
-	var tipCap *big.Int
-
-	if s.options.BaseFee > 0 {
-		feeCap = new(big.Int).Mul(big.NewInt(int64(s.options.BaseFee)), big.NewInt(1000000000))
-	}
-	if s.options.TipFee > 0 {
-		tipCap = new(big.Int).Mul(big.NewInt(int64(s.options.TipFee)), big.NewInt(1000000000))
-	}
-
-	if feeCap == nil || tipCap == nil {
-		var err error
-		feeCap, tipCap, err = client.GetSuggestedFee()
-		if err != nil {
-			return nil, client, err
-		}
-	}
-
-	if feeCap.Cmp(big.NewInt(1000000000)) < 0 {
-		feeCap = big.NewInt(1000000000)
-	}
-	if tipCap.Cmp(big.NewInt(1000000000)) < 0 {
-		tipCap = big.NewInt(1000000000)
-	}
-
-	txData, err := txbuilder.DynFeeTx(&txbuilder.TxMetadata{
-		GasFeeCap: uint256.MustFromBig(feeCap),
-		GasTipCap: uint256.MustFromBig(tipCap),
-		Gas:       200000,
-		To:        nil,
-		Value:     uint256.NewInt(0),
-		Data:      common.FromHex(LOOPER_CONTRACT_BYTECODE),
-	})
+	transactor, err := s.GetTransactor(wallet, false, big.NewInt(0))
 	if err != nil {
 		return nil, nil, err
 	}
 
-	tx, err := wallet.BuildDynamicFeeTx(txData)
+	_, deployTx, _, err := largetx.DeployLooper(transactor, client.GetEthClient())
 	if err != nil {
 		return nil, nil, err
+
 	}
 
-	err = client.SendTransaction(tx)
+	receipt, _, err := s.SendAndAwaitTx(wallet, deployTx, SendTxOpts{Gas: 3000000})
 	if err != nil {
-		return nil, client, err
-	}
-
-	receipt, _, err := client.AwaitTransaction(tx)
-	if err != nil {
-		return nil, client, err
+		return nil, nil, err
 	}
 
 	return receipt, client, nil
@@ -266,20 +231,16 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		tipCap = big.NewInt(1000000000)
 	}
 
-	looperContract, err := largetx.NewLooper(s.contractAddr, client.GetEthClient())
-	if err != nil {
-		s.logger.Errorf("could not create contract instance: %v", err)
-		return nil, nil, err
-	}
-
-	transactor, err := bind.NewKeyedTransactorWithChainID(wallet.GetPrivateKey(), wallet.GetChainId())
+	looperContract, err := s.GetLooperContract()
 	if err != nil {
 		return nil, nil, err
 	}
-	transactor.Context = context.Background()
-	transactor.NoSend = true
 
-	s.logger.Infof("looping %d times in contract %v", s.loopCount, s.contractAddr.String())
+	transactor, err := s.GetTransactor(wallet, false, big.NewInt(0))
+	if err != nil {
+		return nil, nil, err
+	}
+
 	loopItTx, err := looperContract.LoopIt(transactor, s.loopCount)
 	if err != nil {
 		s.logger.Errorf("could not generate transaction: %v", err)
@@ -290,7 +251,7 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		GasFeeCap: uint256.MustFromBig(feeCap),
 		GasTipCap: uint256.MustFromBig(tipCap),
 		Gas:       loopItTx.Gas(),
-		To:        &s.contractAddr,
+		To:        &s.looperContractAddr,
 		Value:     uint256.NewInt(0),
 		Data:      loopItTx.Data(),
 	})
@@ -315,7 +276,7 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 }
 
 func (s *Scenario) awaitTx(txIdx uint64, tx *types.Transaction, client *txbuilder.Client, wallet *txbuilder.Wallet) {
-	var awaitConfirmation bool = true
+	var awaitConfirmation = true
 	defer func() {
 		awaitConfirmation = false
 		if s.pendingChan != nil {
@@ -363,4 +324,87 @@ func (s *Scenario) timeTicker(txIdx uint64, tx *types.Transaction, awaitConfirma
 		s.logger.Infof("timeout reached for tx: %d with hash: %s, stopping test", txIdx, tx.Hash().String())
 		os.Exit(1)
 	}
+}
+
+func (s *Scenario) GetTransactor(wallet *txbuilder.Wallet, noSend bool, value *big.Int) (*bind.TransactOpts, error) {
+	transactor, err := bind.NewKeyedTransactorWithChainID(wallet.GetPrivateKey(), wallet.GetChainId())
+	if err != nil {
+		return nil, err
+	}
+	transactor.Context = context.Background()
+	transactor.NoSend = noSend
+	transactor.Value = value
+
+	return transactor, nil
+}
+
+type SendTxOpts struct {
+	Gas uint64
+}
+
+func (s *Scenario) SendAndAwaitTx(wallet *txbuilder.Wallet, tx *types.Transaction, opts SendTxOpts) (*types.Receipt, *txbuilder.Client, error) {
+	client := s.tester.GetClient(tester.SelectByIndex, 0)
+
+	var feeCap *big.Int
+	var tipCap *big.Int
+
+	if s.options.BaseFee > 0 {
+		feeCap = new(big.Int).Mul(big.NewInt(int64(s.options.BaseFee)), big.NewInt(1000000000))
+	}
+	if s.options.TipFee > 0 {
+		tipCap = new(big.Int).Mul(big.NewInt(int64(s.options.TipFee)), big.NewInt(1000000000))
+	}
+
+	if feeCap == nil || tipCap == nil {
+		var err error
+		feeCap, tipCap, err = client.GetSuggestedFee()
+		if err != nil {
+			return nil, client, err
+		}
+	}
+
+	if feeCap.Cmp(big.NewInt(1000000000)) < 0 {
+		feeCap = big.NewInt(1000000000)
+	}
+	if tipCap.Cmp(big.NewInt(1000000000)) < 0 {
+		tipCap = big.NewInt(1000000000)
+	}
+
+	gas := tx.Gas()
+	if opts.Gas != 0 {
+		gas = opts.Gas
+	}
+
+	dynamicTxData, err := txbuilder.DynFeeTx(&txbuilder.TxMetadata{
+		GasFeeCap: uint256.MustFromBig(feeCap),
+		GasTipCap: uint256.MustFromBig(tipCap),
+		Gas:       gas,
+		To:        tx.To(),
+		Value:     uint256.NewInt(tx.Value().Uint64()),
+		Data:      tx.Data(),
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+	finalTx, err := wallet.BuildDynamicFeeTx(dynamicTxData)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	err = client.SendTransaction(finalTx)
+	if err != nil {
+		return nil, client, err
+	}
+
+	receipt, _, err := client.AwaitTransaction(finalTx)
+	if err != nil {
+		return nil, client, err
+	}
+
+	return receipt, client, nil
+}
+
+func (s *Scenario) GetLooperContract() (*largetx.Looper, error) {
+	client := s.tester.GetClient(tester.SelectByIndex, 0)
+	return largetx.NewLooper(s.looperContractAddr, client.GetEthClient())
 }
