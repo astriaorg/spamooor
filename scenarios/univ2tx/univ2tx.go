@@ -234,7 +234,7 @@ func (s *Scenario) Setup(testerCfg *tester.Tester) error {
 	return nil
 }
 
-func (s *Scenario) Run(testerInstance *tester.Tester) error {
+func (s *Scenario) Run() error {
 	txIdxCounter := uint64(0)
 	counterMutex := sync.Mutex{}
 	waitGroup := sync.WaitGroup{}
@@ -875,7 +875,7 @@ func (s *Scenario) GetDaiAllowance(wallet *txbuilder.Wallet, to common.Address) 
 func (s *Scenario) GetPairReserves() (*big.Int, *big.Int, error) {
 	client := s.tester.GetClient(tester.SelectByIndex, 0)
 
-	pairContract, err := univ2tx.NewUniswapPair(s.pairContract, client.GetEthClient())
+	pairContract, err := univ2tx.NewUniswapV2Pair(s.pairContract, client.GetEthClient())
 	if err != nil {
 		return nil, nil, err
 	}

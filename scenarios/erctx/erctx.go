@@ -96,11 +96,22 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 
 // TODO - move contract deployment to Setup
 func (s *Scenario) Setup(testerCfg *tester.Tester) error {
+	s.logger.Infof("setting up scenario: erctx")
+	s.tester = testerCfg
+
+	s.logger.Infof("deploying token contract...")
+	contractReceipt, _, err := s.sendDeploymentTx()
+	if err != nil {
+		s.logger.Errorf("could not deploy token contract: %v", err)
+		return err
+	}
+	s.contractAddr = contractReceipt.ContractAddress
+	s.logger.Infof("deployed token contract: %v (confirmed in block #%v)", s.contractAddr.String(), contractReceipt.BlockNumber.String())
+
 	return nil
 }
 
-func (s *Scenario) Run(tester *tester.Tester) error {
-	s.tester = tester
+func (s *Scenario) Run() error {
 	txIdxCounter := uint64(0)
 	counterMutex := sync.Mutex{}
 	waitGroup := sync.WaitGroup{}
@@ -109,13 +120,6 @@ func (s *Scenario) Run(tester *tester.Tester) error {
 	startTime := time.Now()
 
 	s.logger.Infof("starting scenario: erctx")
-	contractReceipt, _, err := s.sendDeploymentTx()
-	if err != nil {
-		s.logger.Errorf("could not deploy token contract: %v", err)
-		return err
-	}
-	s.contractAddr = contractReceipt.ContractAddress
-	s.logger.Infof("deployed token contract: %v (confirmed in block #%v)", s.contractAddr.String(), contractReceipt.BlockNumber.String())
 
 	for {
 		txIdx := txIdxCounter

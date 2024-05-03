@@ -118,11 +118,11 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 }
 
 func (s *Scenario) Setup(testerCfg *tester.Tester) error {
+	s.tester = testerCfg
 	return nil
 }
 
-func (s *Scenario) Run(tester *tester.Tester) error {
-	s.tester = tester
+func (s *Scenario) Run() error {
 	txIdxCounter := uint64(0)
 	counterMutex := sync.Mutex{}
 	waitGroup := sync.WaitGroup{}
