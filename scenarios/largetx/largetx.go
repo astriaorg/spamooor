@@ -96,6 +96,11 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 	return nil
 }
 
+// TODO - move contract deployment here
+func (s *Scenario) Setup(testerCfg *tester.Tester) error {
+	return nil
+}
+
 func (s *Scenario) Run(tester *tester.Tester) error {
 	s.tester = tester
 	txIdxCounter := uint64(0)

@@ -8,5 +8,6 @@ import (
 type Scenario interface {
 	Flags(flags *pflag.FlagSet) error
 	Init(testerCfg *tester.TesterConfig) error
+	Setup(testerCfg *tester.Tester) error
 	Run(tester *tester.Tester) error
 }
