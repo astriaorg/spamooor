@@ -97,30 +97,6 @@ func (client *Client) GetEthClient() *ethclient.Client {
 	return client.client
 }
 
-func (client *Client) UpdateWallet(wallet *Wallet) error {
-	if wallet.GetChainId() == nil {
-		chainId, err := client.GetChainId()
-		if err != nil {
-			return err
-		}
-		wallet.SetChainId(chainId)
-	}
-
-	nonce, err := client.GetNonceAt(wallet.GetAddress())
-	if err != nil {
-		return err
-	}
-	wallet.SetNonce(nonce)
-
-	balance, err := client.GetBalanceAt(wallet.GetAddress())
-	if err != nil {
-		return err
-	}
-	wallet.SetBalance(balance)
-
-	return nil
-}
-
 func (client *Client) getContext() context.Context {
 	ctx := context.Background()
 	if client.Timeout > 0 {

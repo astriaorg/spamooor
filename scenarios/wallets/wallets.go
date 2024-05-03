@@ -31,6 +31,10 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	return nil
 }
 
+func (s *Scenario) Setup(testerCfg *tester.Tester) error {
+	return nil
+}
+
 func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 	if s.options.Wallets > 0 {
 		testerCfg.WalletCount = s.options.Wallets

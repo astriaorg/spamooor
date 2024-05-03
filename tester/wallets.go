@@ -16,25 +16,29 @@ import (
 	"github.com/holiman/uint256"
 )
 
-func (tester *Tester) PrepareWallets(seed string) error {
+func (tester *Tester) PrepareRootWallet() error {
 	rootWallet, err := txbuilder.NewWallet(tester.config.WalletPrivkey)
 	if err != nil {
 		return err
 	}
 	tester.rootWallet = rootWallet
 
-	err = tester.GetClient(SelectRandom, 0).UpdateWallet(tester.rootWallet)
+	err = tester.UpdateWallet(tester.rootWallet)
 	if err != nil {
 		return err
 	}
 
 	tester.logger.Infof(
 		"initialized root wallet (addr: %v balance: %v ETH, nonce: %v)",
-		rootWallet.GetAddress().String(),
-		utils.WeiToEther(uint256.MustFromBig(rootWallet.GetBalance())).Uint64(),
-		rootWallet.GetNonce(),
+		tester.rootWallet.GetAddress().String(),
+		utils.WeiToEther(uint256.MustFromBig(tester.rootWallet.GetBalance())).Uint64(),
+		tester.rootWallet.GetNonce(),
 	)
 
+	return nil
+}
+
+func (tester *Tester) PrepareWallets(seed string) error {
 	if tester.config.WalletCount == 0 {
 		tester.childWallets = make([]*txbuilder.Wallet, 0)
 	} else {
@@ -127,10 +131,11 @@ func (tester *Tester) prepareChildWallet(childIdx uint64, client *txbuilder.Clie
 	if err != nil {
 		return nil, nil, err
 	}
-	err = client.UpdateWallet(childWallet)
+	err = tester.UpdateWallet(childWallet)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	tx, err := tester.buildWalletFundingTx(childWallet, client)
 	if err != nil {
 		return nil, nil, err
@@ -138,13 +143,31 @@ func (tester *Tester) prepareChildWallet(childIdx uint64, client *txbuilder.Clie
 	if tx != nil {
 		childWallet.AddBalance(tx.Value())
 	}
+
+	return childWallet, tx, nil
+}
+
+func (tester *Tester) prepareChildWalletGivenWallet(childWallet *txbuilder.Wallet, client *txbuilder.Client) (*txbuilder.Wallet, *types.Transaction, error) {
+	err := tester.UpdateWallet(childWallet)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tx, err := tester.buildWalletFundingTx(childWallet, client)
+	if err != nil {
+		return nil, nil, err
+	}
+	if tx != nil {
+		childWallet.AddBalance(tx.Value())
+	}
+
 	return childWallet, tx, nil
 }
 
 func (tester *Tester) resupplyChildWallets() error {
 	client := tester.GetClient(SelectRandom, 0)
 
-	err := client.UpdateWallet(tester.rootWallet)
+	err := tester.UpdateWallet(tester.rootWallet)
 	if err != nil {
 		return err
 	}
@@ -166,18 +189,11 @@ func (tester *Tester) resupplyChildWallets() error {
 			}
 
 			childWallet := tester.childWallets[childIdx]
-			err := client.UpdateWallet(childWallet)
+
+			childWallet, tx, err := tester.prepareChildWalletGivenWallet(childWallet, client)
 			if err != nil {
 				walletErr = err
 				return
-			}
-			tx, err := tester.buildWalletFundingTx(childWallet, client)
-			if err != nil {
-				walletErr = err
-				return
-			}
-			if tx != nil {
-				childWallet.AddBalance(tx.Value())
 			}
 
 			fundingTxs[childIdx] = tx
@@ -222,26 +238,30 @@ func (tester *Tester) resupplyChildWallets() error {
 	return nil
 }
 
-func (tester *Tester) CheckChildWalletBalance(childWallet *txbuilder.Wallet) (*types.Transaction, error) {
+func (tester *Tester) UpdateWallet(wallet *txbuilder.Wallet) error {
 	client := tester.GetClient(SelectRandom, 0)
-	balance, err := client.GetBalanceAt(childWallet.GetAddress())
-	if err != nil {
-		return nil, err
-	}
-	childWallet.SetBalance(balance)
-	tx, err := tester.buildWalletFundingTx(childWallet, client)
-	if err != nil {
-		return nil, err
-	}
 
-	if tx != nil {
-		_, _, err := client.AwaitTransaction(tx)
+	if wallet.GetChainId() == nil {
+		chainId, err := client.GetChainId()
 		if err != nil {
-			return tx, err
+			return err
 		}
+		wallet.SetChainId(chainId)
 	}
 
-	return tx, nil
+	nonce, err := client.GetNonceAt(wallet.GetAddress())
+	if err != nil {
+		return err
+	}
+	wallet.SetNonce(nonce)
+
+	balance, err := client.GetBalanceAt(wallet.GetAddress())
+	if err != nil {
+		return err
+	}
+	wallet.SetBalance(balance)
+
+	return nil
 }
 
 func (tester *Tester) buildWalletFundingTx(childWallet *txbuilder.Wallet, client *txbuilder.Client) (*types.Transaction, error) {
@@ -280,6 +300,43 @@ func (tester *Tester) buildWalletFundingTx(childWallet *txbuilder.Wallet, client
 		return nil, err
 	}
 	return tx, nil
+}
+
+func (tester *Tester) buildTxWithWalletAndClient(childWallet *txbuilder.Wallet, client *txbuilder.Client, tx *types.Transaction) (*types.Transaction, error) {
+	if childWallet.GetBalance().Cmp(tester.config.WalletMinfund.ToBig()) >= 0 {
+		// no refill needed
+		return nil, nil
+	}
+
+	if client == nil {
+		client = tester.GetClient(SelectByIndex, 0)
+	}
+	feeCap, tipCap, err := client.GetSuggestedFee()
+	if err != nil {
+		return nil, err
+	}
+	if feeCap.Cmp(big.NewInt(400000000000)) < 0 {
+		feeCap = big.NewInt(400000000000)
+	}
+	if tipCap.Cmp(big.NewInt(3000000000)) < 0 {
+		tipCap = big.NewInt(3000000000)
+	}
+
+	refillTx, err := txbuilder.DynFeeTx(&txbuilder.TxMetadata{
+		GasFeeCap: uint256.MustFromBig(feeCap),
+		GasTipCap: uint256.MustFromBig(tipCap),
+		Gas:       tx.Gas(),
+		To:        tx.To(),
+		Value:     uint256.NewInt(tx.Value().Uint64()),
+	})
+	if err != nil {
+		return nil, err
+	}
+	txToSend, err := tester.rootWallet.BuildDynamicFeeTx(refillTx)
+	if err != nil {
+		return nil, err
+	}
+	return txToSend, nil
 }
 
 func (tester *Tester) sendTxRange(txList []*types.Transaction, client *txbuilder.Client) error {
