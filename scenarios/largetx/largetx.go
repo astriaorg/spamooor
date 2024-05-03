@@ -235,7 +235,7 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		return nil, nil, err
 	}
 
-	transactor, err := s.GetTransactor(wallet, false, big.NewInt(0))
+	transactor, err := s.GetTransactor(wallet, true, big.NewInt(0))
 	if err != nil {
 		return nil, nil, err
 	}
