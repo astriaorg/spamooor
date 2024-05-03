@@ -97,8 +97,8 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 }
 
 func (s *Scenario) Setup(testerCfg *tester.Tester) error {
-	s.logger.Infof("setting up scenario: largetx")
 	s.tester = testerCfg
+	s.logger.Infof("setting up scenario: largetx")
 	s.logger.Infof("deploying looper contract...")
 	receipt, _, err := s.DeployLooperContract()
 	if err != nil {
@@ -183,7 +183,7 @@ func (s *Scenario) DeployLooperContract() (*types.Receipt, *txbuilder.Client, er
 	wallet := s.tester.GetRootWallet()
 	client := s.tester.GetClient(tester.SelectByIndex, 0)
 
-	transactor, err := s.GetTransactor(wallet, false, big.NewInt(0))
+	transactor, err := s.GetTransactor(wallet, true, big.NewInt(0))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -191,10 +191,9 @@ func (s *Scenario) DeployLooperContract() (*types.Receipt, *txbuilder.Client, er
 	_, deployTx, _, err := largetx.DeployLooper(transactor, client.GetEthClient())
 	if err != nil {
 		return nil, nil, err
-
 	}
 
-	receipt, _, err := s.SendAndAwaitTx(wallet, deployTx, SendTxOpts{Gas: 3000000})
+	receipt, _, err := s.SendAndAwaitTx(wallet, deployTx, SendTxOpts{Gas: 2000000})
 	if err != nil {
 		return nil, nil, err
 	}
