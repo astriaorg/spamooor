@@ -220,6 +220,7 @@ func (client *Client) AwaitTransaction(tx *types.Transaction) (*types.Receipt, u
 		client.logger.Warnf("receipt error: %v\n", err)
 		return nil, blockHeight, err
 	}
+
 	return nil, blockHeight, nil
 }
 
