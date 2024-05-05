@@ -193,7 +193,14 @@ func (s *Scenario) DeployLooperContract() (*types.Receipt, *txbuilder.Client, er
 		return nil, nil, err
 	}
 
-	receipt, _, err := s.SendAndAwaitTx(wallet, deployTx, SendTxOpts{Gas: 2000000})
+	receipt, _, err := txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
+		Wallet:  wallet,
+		Tx:      deployTx,
+		Client:  client,
+		BaseFee: int64(s.options.BaseFee),
+		TipFee:  int64(s.options.TipFee),
+		Gas:     2000000,
+	})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -335,72 +342,6 @@ func (s *Scenario) GetTransactor(wallet *txbuilder.Wallet, noSend bool, value *b
 	transactor.Value = value
 
 	return transactor, nil
-}
-
-type SendTxOpts struct {
-	Gas uint64
-}
-
-func (s *Scenario) SendAndAwaitTx(wallet *txbuilder.Wallet, tx *types.Transaction, opts SendTxOpts) (*types.Receipt, *txbuilder.Client, error) {
-	client := s.tester.GetClient(tester.SelectByIndex, 0)
-
-	var feeCap *big.Int
-	var tipCap *big.Int
-
-	if s.options.BaseFee > 0 {
-		feeCap = new(big.Int).Mul(big.NewInt(int64(s.options.BaseFee)), big.NewInt(1000000000))
-	}
-	if s.options.TipFee > 0 {
-		tipCap = new(big.Int).Mul(big.NewInt(int64(s.options.TipFee)), big.NewInt(1000000000))
-	}
-
-	if feeCap == nil || tipCap == nil {
-		var err error
-		feeCap, tipCap, err = client.GetSuggestedFee()
-		if err != nil {
-			return nil, client, err
-		}
-	}
-
-	if feeCap.Cmp(big.NewInt(1000000000)) < 0 {
-		feeCap = big.NewInt(1000000000)
-	}
-	if tipCap.Cmp(big.NewInt(1000000000)) < 0 {
-		tipCap = big.NewInt(1000000000)
-	}
-
-	gas := tx.Gas()
-	if opts.Gas != 0 {
-		gas = opts.Gas
-	}
-
-	dynamicTxData, err := txbuilder.DynFeeTx(&txbuilder.TxMetadata{
-		GasFeeCap: uint256.MustFromBig(feeCap),
-		GasTipCap: uint256.MustFromBig(tipCap),
-		Gas:       gas,
-		To:        tx.To(),
-		Value:     uint256.NewInt(tx.Value().Uint64()),
-		Data:      tx.Data(),
-	})
-	if err != nil {
-		return nil, nil, err
-	}
-	finalTx, err := wallet.BuildDynamicFeeTx(dynamicTxData)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	err = client.SendTransaction(finalTx)
-	if err != nil {
-		return nil, client, err
-	}
-
-	receipt, _, err := client.AwaitTransaction(finalTx)
-	if err != nil {
-		return nil, client, err
-	}
-
-	return receipt, client, nil
 }
 
 func (s *Scenario) GetLooperContract() (*largetx.Looper, error) {

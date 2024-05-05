@@ -1,8 +1,10 @@
 package txbuilder
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"errors"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"math/big"
 	"sync"
 
@@ -143,4 +145,16 @@ func (wallet *Wallet) signTx(txData types.TxData) (*types.Transaction, error) {
 		return nil, err
 	}
 	return signedTx, nil
+}
+
+func (wallet *Wallet) GetTransactor(noSend bool, value *big.Int) (*bind.TransactOpts, error) {
+	transactor, err := bind.NewKeyedTransactorWithChainID(wallet.GetPrivateKey(), wallet.GetChainId())
+	if err != nil {
+		return nil, err
+	}
+	transactor.Context = context.Background()
+	transactor.NoSend = noSend
+	transactor.Value = value
+
+	return transactor, nil
 }
