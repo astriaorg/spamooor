@@ -1,10 +1,10 @@
-package largetx
+package gasburnertx
 
 import (
 	"context"
 	"fmt"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	largetx "github.com/ethpandaops/goomy-blob/scenarios/largetx/contracts"
+	largetx "github.com/ethpandaops/goomy-blob/scenarios/gasburnertx/contracts"
 	"github.com/ethpandaops/goomy-blob/utils"
 	"math/big"
 	"os"
@@ -21,17 +21,15 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var LOOPER_CONTRACT_BYTECODE = "0x608060405234801561001057600080fd5b506101c5806100206000396000f3fe608060405234801561001057600080fd5b506004361061002b5760003560e01c80638f491c6514610030575b600080fd5b61004361003e3660046100ee565b610059565b604051610050919061011f565b60405180910390f35b606060008267ffffffffffffffff1667ffffffffffffffff81111561008057610080610163565b6040519080825280602002602001820160405280156100a9578160200160208202803683370190505b50905060005b8367ffffffffffffffff168110156100e757808282815181106100d4576100d4610179565b60209081029190910101526001016100af565b5092915050565b60006020828403121561010057600080fd5b813567ffffffffffffffff8116811461011857600080fd5b9392505050565b6020808252825182820181905260009190848201906040850190845b818110156101575783518352928401929184019160010161013b565b50909695505050505050565b634e487b7160e01b600052604160045260246000fd5b634e487b7160e01b600052603260045260246000fdfea2646970667358221220b226884699e16cc47ae01a4cc201e790347695464df17edde46bbab26872400364736f6c63430008180033"
-
 type ScenarioOptions struct {
-	TotalCount uint64
-	Throughput uint64
-	MaxPending uint64
-	MaxWallets uint64
-	Timeout    uint64
-	BaseFee    uint64
-	TipFee     uint64
-	LoopCount  uint64
+	TotalCount     uint64
+	Throughput     uint64
+	MaxPending     uint64
+	MaxWallets     uint64
+	Timeout        uint64
+	BaseFee        uint64
+	TipFee         uint64
+	GasUnitsToBurn uint64
 }
 
 type Scenario struct {
@@ -39,8 +37,7 @@ type Scenario struct {
 	logger  *logrus.Entry
 	tester  *tester.Tester
 
-	looperContractAddr common.Address
-	loopCount          uint64
+	gasBurnerContractAddr common.Address
 
 	pendingCount  uint64
 	pendingChan   chan bool
@@ -49,7 +46,7 @@ type Scenario struct {
 
 func NewScenario() scenariotypes.Scenario {
 	return &Scenario{
-		logger: logrus.WithField("scenario", "largetx"),
+		logger: logrus.WithField("scenario", "gasburnertx"),
 	}
 }
 
@@ -61,7 +58,7 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flags.Uint64Var(&s.options.Timeout, "timeout", 120, "Number of seconds to wait timing out the test")
 	flags.Uint64Var(&s.options.BaseFee, "basefee", 20, "Max fee per gas to use in large transactions (in gwei)")
 	flags.Uint64Var(&s.options.TipFee, "tipfee", 2, "Max tip per gas to use in large transactions (in gwei)")
-	flags.Uint64Var(&s.options.LoopCount, "loop-count", 20000, "The number of loops to perform in the contract. This will increase the gas units")
+	flags.Uint64Var(&s.options.GasUnitsToBurn, "gas-units-to-burn", 2000000, "The number of gas units for each tx to cost")
 
 	return nil
 }
@@ -91,23 +88,21 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 		s.pendingChan = make(chan bool, s.options.MaxPending)
 	}
 
-	s.loopCount = s.options.LoopCount
-
 	return nil
 }
 
 func (s *Scenario) Setup(testerCfg *tester.Tester) error {
 	s.tester = testerCfg
-	s.logger.Infof("setting up scenario: largetx")
-	s.logger.Infof("deploying looper contract...")
-	receipt, _, err := s.DeployLooperContract()
+	s.logger.Infof("setting up scenario: gasburnertx")
+	s.logger.Infof("deploying gas burner contract...")
+	receipt, _, err := s.DeployGasBurnerContract()
 	if err != nil {
 		return err
 	}
 
-	s.looperContractAddr = receipt.ContractAddress
+	s.gasBurnerContractAddr = receipt.ContractAddress
 
-	s.logger.Infof("deployed looper contract at %v", s.looperContractAddr.String())
+	s.logger.Infof("deployed gas burner contract at %v", s.gasBurnerContractAddr.String())
 
 	return nil
 }
@@ -120,7 +115,7 @@ func (s *Scenario) Run() error {
 	txCount := uint64(0)
 	startTime := time.Now()
 
-	s.logger.Infof("starting scenario: largetx")
+	s.logger.Infof("starting scenario: gasburnertx")
 
 	for {
 		txIdx := txIdxCounter
@@ -179,7 +174,7 @@ func (s *Scenario) Run() error {
 	return nil
 }
 
-func (s *Scenario) DeployLooperContract() (*types.Receipt, *txbuilder.Client, error) {
+func (s *Scenario) DeployGasBurnerContract() (*types.Receipt, *txbuilder.Client, error) {
 	wallet := s.tester.GetRootWallet()
 	client := s.tester.GetClient(tester.SelectByIndex, 0)
 
@@ -188,7 +183,7 @@ func (s *Scenario) DeployLooperContract() (*types.Receipt, *txbuilder.Client, er
 		return nil, nil, err
 	}
 
-	_, deployTx, _, err := largetx.DeployLooper(transactor, client.GetEthClient())
+	_, deployTx, _, err := largetx.DeployGasBurner(transactor, client.GetEthClient())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -237,7 +232,7 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		tipCap = big.NewInt(1000000000)
 	}
 
-	looperContract, err := s.GetLooperContract()
+	gasBurnerContract, err := s.GetGasBurner()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -247,7 +242,8 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		return nil, nil, err
 	}
 
-	loopItTx, err := looperContract.LoopIt(transactor, s.loopCount)
+	s.logger.Infof("gas units to burn for tx %d: %d", txIdx+1, s.options.GasUnitsToBurn)
+	gasBurnerTx, err := gasBurnerContract.BurnGasUnits(transactor, big.NewInt(int64(s.options.GasUnitsToBurn)))
 	if err != nil {
 		s.logger.Errorf("could not generate transaction: %v", err)
 		return nil, nil, err
@@ -256,10 +252,10 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 	txData, err := txbuilder.DynFeeTx(&txbuilder.TxMetadata{
 		GasFeeCap: uint256.MustFromBig(feeCap),
 		GasTipCap: uint256.MustFromBig(tipCap),
-		Gas:       loopItTx.Gas(),
-		To:        &s.looperContractAddr,
+		Gas:       gasBurnerTx.Gas(),
+		To:        &s.gasBurnerContractAddr,
 		Value:     uint256.NewInt(0),
-		Data:      loopItTx.Data(),
+		Data:      gasBurnerTx.Data(),
 	})
 	if err != nil {
 		return nil, nil, err
@@ -344,7 +340,7 @@ func (s *Scenario) GetTransactor(wallet *txbuilder.Wallet, noSend bool, value *b
 	return transactor, nil
 }
 
-func (s *Scenario) GetLooperContract() (*largetx.Looper, error) {
+func (s *Scenario) GetGasBurner() (*largetx.GasBurner, error) {
 	client := s.tester.GetClient(tester.SelectByIndex, 0)
-	return largetx.NewLooper(s.looperContractAddr, client.GetEthClient())
+	return largetx.NewGasBurner(s.gasBurnerContractAddr, client.GetEthClient())
 }
