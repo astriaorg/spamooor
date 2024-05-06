@@ -28,7 +28,7 @@ type ScenarioOptions struct {
 	Timeout            uint64
 	BaseFee            uint64
 	TipFee             uint64
-	TokenMintAmount    uint64 // this is in eth values
+	DaiMintAmount      uint64
 	AmountToSwap       uint64
 	RandomAmountToSwap bool
 }
@@ -48,7 +48,7 @@ type Scenario struct {
 	pendingChan   chan bool
 	pendingWGroup sync.WaitGroup
 
-	tokenMintAmount uint64
+	daiMintAmount uint64
 }
 
 func NewScenario() scenariotypes.Scenario {
@@ -65,7 +65,7 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flags.Uint64Var(&s.options.Timeout, "timeout", 120, "Number of seconds to wait timing out the test")
 	flags.Uint64Var(&s.options.BaseFee, "basefee", 20, "Max fee per gas to use in large transactions (in gwei)")
 	flags.Uint64Var(&s.options.TipFee, "tipfee", 2, "Max tip per gas to use in large transactions (in gwei)")
-	flag.Uint64Var(&s.options.TokenMintAmount, "token-mint-amount", 1000000000000000000, "Amount of tokens to mint for each child wallet")
+	flag.Uint64Var(&s.options.DaiMintAmount, "dai-mint-amount", 1000000000000000000, "Amount of dai to mint for each child wallet")
 	flag.Uint64Var(&s.options.AmountToSwap, "amount-to-swap", 1, "Amount of tokens to swap in each transaction(in gwei)")
 	flag.BoolVar(&s.options.RandomAmountToSwap, "random-amount-to-swap", false, "Randomize the amount of tokens to swap in each transaction(in gwei)")
 
@@ -97,8 +97,8 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 		s.pendingChan = make(chan bool, s.options.MaxPending)
 	}
 
-	if s.options.TokenMintAmount > 0 {
-		s.tokenMintAmount = s.options.TokenMintAmount
+	if s.options.DaiMintAmount > 0 {
+		s.daiMintAmount = s.options.DaiMintAmount
 	}
 
 	return nil
@@ -403,8 +403,8 @@ func (s *Scenario) MintDaiAndWethForRootWallet() error {
 	wallet := s.tester.GetRootWallet()
 	client := s.tester.GetClient(tester.SelectByIndex, 0)
 
-	daiAmountToMint := big.NewInt(0).Mul(big.NewInt(int64(s.tester.GetTotalChildWallets())), big.NewInt(int64(s.tokenMintAmount)))
-	wethAmountToMint := big.NewInt(0).Mul(big.NewInt(int64(s.tester.GetTotalChildWallets())), big.NewInt(int64(s.tokenMintAmount)))
+	daiAmountToMint := big.NewInt(0).Mul(big.NewInt(int64(s.tester.GetTotalChildWallets())), big.NewInt(int64(s.daiMintAmount)))
+	wethAmountToMint := big.NewInt(0).Mul(big.NewInt(int64(s.tester.GetTotalChildWallets())), big.NewInt(int64(s.daiMintAmount)))
 
 	rootWalletTransactor, err := wallet.GetTransactor(true, big.NewInt(0))
 	if err != nil {
@@ -524,7 +524,7 @@ func (s *Scenario) MintDaiAndWethForChildWallets() (map[common.Address][]error, 
 		return nil, err
 	}
 
-	tokenMintAmount := s.tokenMintAmount
+	tokenMintAmount := s.daiMintAmount
 	batchSize := uint64(5)
 	batchIndex := uint64(0)
 
