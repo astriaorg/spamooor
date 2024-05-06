@@ -5,11 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dbbec896-4ab9-4a9a-ae52-42d52bfdf4e1" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/txbuilder/tx.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scenarios/univ2tx/univ2tx.go" beforeDir="false" afterPath="$PROJECT_DIR$/scenarios/univ2tx/univ2tx.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/txbuilder/client.go" beforeDir="false" afterPath="$PROJECT_DIR$/txbuilder/client.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/txbuilder/wallet.go" beforeDir="false" afterPath="$PROJECT_DIR$/txbuilder/wallet.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
