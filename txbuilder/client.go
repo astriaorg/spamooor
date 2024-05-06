@@ -75,7 +75,7 @@ func NewClient(rpchost string) (*Client, error) {
 	return &Client{
 		client:              ethclient.NewClient(rpcClient),
 		rpchost:             rpchost,
-		logger:              logrus.WithField("client", rpchost),
+		logger:              logrus.WithField("Client", rpchost),
 		awaitNonceWalletMap: make(map[common.Address]*clientNonceAwait),
 	}, nil
 }
@@ -268,7 +268,7 @@ func (client *Client) AwaitWalletNonce(wallet common.Address, nonce uint64, bloc
 				time.Sleep(2 * time.Second)
 			}
 			if err != nil {
-				// can't check nonce - client is probably dead or unsynced
+				// can't check nonce - Client is probably dead or unsynced
 				// cancel nonceAwaiter, bubble up error
 				walletNonceAwaiter.errorResult = err
 				client.disposeWalletNonceAwaiter(wallet, walletNonceAwaiter, true)
