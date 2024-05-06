@@ -359,13 +359,11 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 	deadline := time.Now().Add(10 * time.Minute).Unix()
 
 	if result.Uint64() == 0 {
-		s.logger.Infof("swapping DAI for WETH")
 		swapTx, err = routerContract.SwapExactTokensForETH(walletTransactor, amount.ToBig(), big.NewInt(0), swapDirection, wallet.GetAddress(), big.NewInt(deadline))
 		if err != nil {
 			return nil, nil, err
 		}
 	} else {
-		s.logger.Infof("swapping WETH for DAI")
 		walletTransactor.Value = amount.ToBig()
 		swapTx, err = routerContract.SwapExactETHForTokens(walletTransactor, big.NewInt(0), swapDirection, wallet.GetAddress(), big.NewInt(deadline))
 		if err != nil {
