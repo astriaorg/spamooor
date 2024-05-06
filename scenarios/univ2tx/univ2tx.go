@@ -48,7 +48,7 @@ type Scenario struct {
 	pendingChan   chan bool
 	pendingWGroup sync.WaitGroup
 
-	daiMintAmount uint64
+	daiMintAmount *big.Int
 }
 
 func NewScenario() scenariotypes.Scenario {
@@ -65,7 +65,7 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flags.Uint64Var(&s.options.Timeout, "timeout", 120, "Number of seconds to wait timing out the test")
 	flags.Uint64Var(&s.options.BaseFee, "basefee", 20, "Max fee per gas to use in large transactions (in gwei)")
 	flags.Uint64Var(&s.options.TipFee, "tipfee", 2, "Max tip per gas to use in large transactions (in gwei)")
-	flag.Uint64Var(&s.options.DaiMintAmount, "dai-mint-amount", 1000000000000000000, "Amount of dai to mint for each child wallet")
+	flag.Uint64Var(&s.options.DaiMintAmount, "dai-mint-amount", 1, "Amount of dai to mint for each child wallet (in ethers)")
 	flag.Uint64Var(&s.options.AmountToSwap, "amount-to-swap", 1, "Amount of tokens to swap in each transaction(in gwei)")
 	flag.BoolVar(&s.options.RandomAmountToSwap, "random-amount-to-swap", false, "Randomize the amount of tokens to swap in each transaction(in gwei)")
 
@@ -98,7 +98,7 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 	}
 
 	if s.options.DaiMintAmount > 0 {
-		s.daiMintAmount = s.options.DaiMintAmount
+		s.daiMintAmount = big.NewInt(0).Mul(big.NewInt(int64(s.options.DaiMintAmount)), big.NewInt(1000000000000000000))
 	}
 
 	return nil
@@ -403,8 +403,8 @@ func (s *Scenario) MintDaiAndWethForRootWallet() error {
 	wallet := s.tester.GetRootWallet()
 	client := s.tester.GetClient(tester.SelectByIndex, 0)
 
-	daiAmountToMint := big.NewInt(0).Mul(big.NewInt(int64(s.tester.GetTotalChildWallets())), big.NewInt(int64(s.daiMintAmount)))
-	wethAmountToMint := big.NewInt(0).Mul(big.NewInt(int64(s.tester.GetTotalChildWallets())), big.NewInt(int64(s.daiMintAmount)))
+	daiAmountToMint := s.daiMintAmount
+	wethAmountToMint := s.daiMintAmount
 
 	rootWalletTransactor, err := wallet.GetTransactor(true, big.NewInt(0))
 	if err != nil {
@@ -573,7 +573,7 @@ func (s *Scenario) MintDaiAndWethForChildWallets() (map[common.Address][]error, 
 					}
 
 					// mint DAI for child wallet
-					daiMintTx, err := daiContract.Mint(rootWalletTransactor, childWallet.GetAddress(), big.NewInt(int64(tokenMintAmount)))
+					daiMintTx, err := daiContract.Mint(rootWalletTransactor, childWallet.GetAddress(), tokenMintAmount)
 					if err != nil {
 						s.logger.Errorf("could not mint DAI for child wallet: %v", err)
 						errorMapLock.Lock()
@@ -584,7 +584,7 @@ func (s *Scenario) MintDaiAndWethForChildWallets() (map[common.Address][]error, 
 
 					childWalletTransactor.Value = big.NewInt(0)
 					// dai approval
-					daiApproveTx, err := daiContract.Approve(childWalletTransactor, s.uniswapRouterContract, big.NewInt(int64(tokenMintAmount)))
+					daiApproveTx, err := daiContract.Approve(childWalletTransactor, s.uniswapRouterContract, tokenMintAmount)
 					if err != nil {
 						s.logger.Errorf("could not approve DAI for child wallet: %v", err)
 						errorMapLock.Lock()
