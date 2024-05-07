@@ -525,7 +525,7 @@ func (s *Scenario) MintDaiAndWethForChildWallets() (map[common.Address][]error, 
 	}
 
 	tokenMintAmount := s.daiMintAmount
-	batchSize := uint64(5)
+	batchSize := uint64(100)
 	batchIndex := uint64(0)
 
 	errorMapLock := sync.Mutex{}
