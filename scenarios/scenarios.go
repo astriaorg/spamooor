@@ -1,12 +1,12 @@
 package scenarios
 
 import (
-	"github.com/ethpandaops/goomy-blob/scenarios/deploytx"
-	"github.com/ethpandaops/goomy-blob/scenarios/eoatx"
-	"github.com/ethpandaops/goomy-blob/scenarios/erctx"
-	"github.com/ethpandaops/goomy-blob/scenarios/gasburnertx"
-	"github.com/ethpandaops/goomy-blob/scenarios/univ2tx"
-	"github.com/ethpandaops/goomy-blob/scenariotypes"
+	"github.com/astriaorg/spamooor/scenarios/deploytx"
+	"github.com/astriaorg/spamooor/scenarios/eoatx"
+	"github.com/astriaorg/spamooor/scenarios/erctx"
+	"github.com/astriaorg/spamooor/scenarios/gasburnertx"
+	"github.com/astriaorg/spamooor/scenarios/univ2tx"
+	"github.com/astriaorg/spamooor/scenariotypes"
 )
 
 var Scenarios = map[string]func() scenariotypes.Scenario{

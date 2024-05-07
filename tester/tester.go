@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethpandaops/goomy-blob/txbuilder"
-	"github.com/ethpandaops/goomy-blob/utils"
+	"github.com/astriaorg/spamooor/txbuilder"
+	"github.com/astriaorg/spamooor/utils"
 	"github.com/holiman/uint256"
 	"github.com/sirupsen/logrus"
 )

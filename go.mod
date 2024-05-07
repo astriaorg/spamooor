@@ -1,4 +1,4 @@
-module github.com/ethpandaops/goomy-blob
+module github.com/astriaorg/spamooor
 
 go 1.21.1
 
