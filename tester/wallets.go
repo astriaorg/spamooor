@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/astriaorg/spamooor/txbuilder"
+	"github.com/astriaorg/spamooor/utils"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethpandaops/goomy-blob/txbuilder"
-	"github.com/ethpandaops/goomy-blob/utils"
 	"github.com/holiman/uint256"
 )
 

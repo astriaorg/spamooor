@@ -1,7 +1,7 @@
 package scenariotypes
 
 import (
-	"github.com/ethpandaops/goomy-blob/tester"
+	"github.com/astriaorg/spamooor/tester"
 	"github.com/spf13/pflag"
 )
 
