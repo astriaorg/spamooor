@@ -355,7 +355,12 @@ func (s *Scenario) awaitTx(txIdx uint64, tx *types.Transaction, client *txbuilde
 	gweiBaseFee := new(big.Int).Div(effectiveGasPrice, big.NewInt(1000000000))
 	gweiBlobFee := new(big.Int).Div(blobGasPrice, big.NewInt(1000000000))
 
-	s.logger.WithField("client", client.GetName()).Infof(" transaction %d confirmed in block #%v. total fee: %v gwei (base: %v, blob: %v)", txIdx+1, blockNum, gweiTotalFee, gweiBaseFee, gweiBlobFee)
+	txStatus := "failure"
+	if receipt.Status == 1 {
+		txStatus = "success"
+	}
+
+	s.logger.WithField("client", client.GetName()).Infof(" transaction %d confirmed in block #%v with %s. total fee: %v gwei (base: %v, blob: %v)", txIdx+1, blockNum, txStatus, gweiTotalFee, gweiBaseFee, gweiBlobFee)
 }
 
 func (s *Scenario) timeTicker(txIdx uint64, tx *types.Transaction, awaitConfirmation *bool) {
