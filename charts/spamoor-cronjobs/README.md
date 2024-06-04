@@ -1,28 +1,22 @@
-# helm-cronjobs
-You can define an array of jobs in values.yaml helm will take care of creating all the CronJobs.
+# spamoor-cronjobs
+You can define an array of jobs in values.yaml helm will take care of creating all of the CronJobs.
 
-## How to use as a starter chart
+Credit: [helm-cronjobs](https://github.com/bambash/helm-cronjobs) used as scafolding for this chart.
 
-1. Find your Helm data directory, `HELM_DATA_HOME`
+## Getting started
 
-    ```
-    helm env
-    ```
+`helm create -p <scaffolding_path> <new_chart_name>`
 
-1.  `cd` to this directory, then
+  ```
+    helm create -p helm-cronjobs spamoor-cronjobs
+  ```
 
-    ```
-    mkdir starters
-    cd starters
-    ```
+## For debugging 
+`helm template --dry-run --debug -name <release_name> <chart_path>`
+```
+helm template --dry-run --debug -name cronjobs spamoor-cronjobs
+```
 
-1.  Clone this repo
-
-1.  In your cronjob project, set up your new chart with
-
-    ```
-    helm create -p helm-cronjobs your_chart_name
-    ```
 
 ## Configuration
 
@@ -115,31 +109,27 @@ jobs:
 ## Examples
 ```
 $ helm install test-cron-job .
-NAME:   cold-fly
-LAST DEPLOYED: Fri Feb  1 15:29:21 2019
-NAMESPACE: default
-STATUS: DEPLOYED
+NAME: test-cron-job
+LAST DEPLOYED: Tue Jun  4 12:27:32 2024
+NAMESPACE: spamoor-cronjobs
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
 
 RESOURCES:
 ==> v1/CronJob
 NAME                    AGE
-cold-fly-hello-world    1s
-cold-fly-hello-ubuntu   1s
-cold-fly-hello-env-var  1s
+test-cronjob-curl    1s
 ```
 list cronjobs:
 ```
 $ kubectl get cronjob
-NAME                     SCHEDULE      SUSPEND   ACTIVE    LAST SCHEDULE   AGE
-cold-fly-hello-env-var   * * * * *     False     0         23s             1m
-cold-fly-hello-ubuntu    */5 * * * *   False     0         23s             1m
-cold-fly-hello-world     * * * * *     False     0         23s             1m
+NAME                 SCHEDULE    SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+test-cron-job-curl   * * * * *   False     1        5m23s           5m49s
 ```
 list jobs:
 ```
 $ kubectl get jobs
 NAME                                DESIRED   SUCCESSFUL   AGE
-cold-fly-hello-env-var-1549056600   1         1            45s
-cold-fly-hello-ubuntu-1549056600    1         1            45s
-cold-fly-hello-world-1549056600     1         1            45s
+test-cron-job-curl-28625488   0/1           6m6s       6m6s
 ```

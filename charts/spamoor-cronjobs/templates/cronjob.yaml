@@ -4,6 +4,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: {{ include "cronjobs.releaseName" $ }}-{{ $jobname }}
+  namespace: {{ $.Chart.Name }}
   labels:
     {{- include "cronjobs.labels" $ | nindent 4 }}
 spec:
