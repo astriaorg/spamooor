@@ -1,0 +1,58 @@
+name: Docker
+
+# Trigger on pushes to master branch, new semantic version tags, and pull request updates
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Git branch, or tag to build from.
+        required: false
+      target:
+        description: Target to build.
+        required: false
+        type: choice
+        options:
+          - spamooor
+
+  merge_group:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "**-v[0-9]+.[0-9]+.[0-9]+"
+      - "**-v[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+"
+      - "**-v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
+      - "**-v[0-9]+.[0-9]+.[0-9]+-rc[0-9]+"
+    
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+
+jobs:
+  run_checker:
+    uses: ./.github/workflows/reusable-run-checker.yml
+
+  spamooor:
+    needs: run_checker
+    if: needs.run_checker.outputs.run_docker == 'true' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'spamooor')
+    uses: "./.github/workflows/reusable-docker-build.yml"
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+    with:
+      # depot-project-id: mhgvgvsjnx
+      package-name: spamooor
+      target-binary: astria-spamooor
+      tag: ${{ inputs.tag }}
+    secrets: inherit
+
+  docker:
+    if: ${{ always() && !cancelled() }}
+    needs: [spamooor]
+    uses: ./.github/workflows/reusable-success.yml
+    with:
+      success: ${{ !contains(needs.*.result, 'failure') }}
