@@ -7,17 +7,20 @@ jobs:
       runAsGroup: 1000
       fsGroup: 2000
     image:
-      repository: curlimages/curl
-      tag: 8.8.0
+      repository: spamooor
+      tag: latest
       imagePullPolicy: Always
-    env:
-    - name: URL_VAR
-      value: "https://curl.se"
-    schedule: "0 * * * *"
+    schedule: "*/10 * * * *" # run every 10mins
     args:
-      - "-L"
-      - "-v"
-      - "URL_VAR"
+      - "spamooor"
+      - "--privkey <privkey>"
+      - "--rpchost https://rpc-evm.dev.astria.org"
+      - "erctx"
+      - "--max-wallets 10"
+      - "--throughput 10"
+      - "--max-pending 10"
+      - "--count 50"
+      - "--timeout 60"
     resources:
       limits:
         cpu: 50m
