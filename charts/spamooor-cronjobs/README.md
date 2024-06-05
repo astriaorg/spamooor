@@ -1,4 +1,4 @@
-# spamoor-cronjobs
+# spamooor-cronjobs
 You can define an array of jobs in values.yaml helm will take care of creating all of the CronJobs.
 
 Credit: [helm-cronjobs](https://github.com/bambash/helm-cronjobs) used as scafolding for this chart.
@@ -8,13 +8,13 @@ Credit: [helm-cronjobs](https://github.com/bambash/helm-cronjobs) used as scafol
 `helm create -p <scaffolding_path> <new_chart_name>`
 
   ```
-    helm create -p helm-cronjobs spamoor-cronjobs
+    helm create -p helm-cronjobs spamooor-cronjobs
   ```
 
 ## For debugging 
 `helm template --dry-run --debug -name <release_name> <chart_path>`
 ```
-helm template --dry-run --debug -name cronjobs spamoor-cronjobs
+helm template --dry-run --debug -name cronjobs spamooor-cronjobs
 ```
 
 
@@ -111,7 +111,7 @@ jobs:
 $ helm install test-cron-job .
 NAME: test-cron-job
 LAST DEPLOYED: Tue Jun  4 12:27:32 2024
-NAMESPACE: spamoor-cronjobs
+NAMESPACE: spamooor-cronjobs
 STATUS: deployed
 REVISION: 1
 TEST SUITE: None
