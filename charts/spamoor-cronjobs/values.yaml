@@ -13,7 +13,7 @@ jobs:
     schedule: "*/10 * * * *" # run every 10mins
     args:
       - "spamooor"
-      - "--privkey 0x3f47c0880Ff6d7a6F22Ab1CA8e6fb6801ed0374d"
+      - "--privkey 3f47c0880Ff6d7a6F22Ab1CA8e6fb6801ed0374d"
       - "--rpchost https://rpc-evm.dev.astria.org"
       - "erctx"
       - "--max-wallets 10"
