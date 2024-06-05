@@ -11,8 +11,7 @@ RUN <<EOR
   VERSION=$(git rev-parse --short HEAD)
   BUILDTIME=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
   RELEASE=$release
-  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /app/blob-sender -ldflags="-s -w -X 'github.com/ethpandaops/goomy-blob/utils.BuildVersion=${VERSION}' -X 'github.com/ethpandaops/goomy-blob/utils.BuildRelease=${RELEASE}' -X 'github.com/ethpandaops/goomy-blob/utils.Buildtime=${BUILDTIME}'" ./cmd/blob-sender
-  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /app/spamooor -ldflags="-s -w -X 'github.com/ethpandaops/goomy-blob/utils.BuildVersion=${VERSION}' -X 'github.com/ethpandaops/goomy-blob/utils.BuildRelease=${RELEASE}' -X 'github.com/ethpandaops/goomy-blob/utils.Buildtime=${BUILDTIME}'" ./cmd/spamooor
+  CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /app/spamooor -ldflags="-s -w -X 'github.com/astriaorg/spamooor/utils.BuildVersion=${VERSION}' -X 'github.com/ethpandaops/goomy-blob/utils.BuildRelease=${RELEASE}' -X 'github.com/ethpandaops/goomy-blob/utils.Buildtime=${BUILDTIME}'" ./cmd/spamooor
 EOR
 
 # final stage
