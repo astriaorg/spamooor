@@ -16,7 +16,7 @@ jobs:
       - "--privkey"
       - "386f0870b016136deaf37a24e7fc958dfdcb3bcc7a80cb7b110eb474c88f6934"
       - "--rpchost"
-      - "https://rpc.evm.dusk-7.devnet.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "erctx"
       - "--max-wallets"
       - "10"
@@ -54,7 +54,7 @@ jobs:
       - "--privkey"
       - "2bff74e4775a2aabb8325554e2034e6eca26635318b2502a5049a359b4d0cd2f"
       - "--rpchost"
-      - "https://rpc.evm.dusk-7.devnet.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "eoatx"
       - "--max-wallets"
       - "10"
@@ -93,7 +93,7 @@ jobs:
       - "--privkey"
       - "64b947d57a7e2633b109875ca71acf13fe8c11237b55616ef87d4a1b907133c8"
       - "--rpchost"
-      - "https://rpc.evm.dusk-7.devnet.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "univ2tx"
       - "--max-wallets"
       - "10"
@@ -131,7 +131,7 @@ jobs:
       - "--privkey"
       - "57b5fb1ad7f7e0d6e2a085ef7cc761c0576d23760d0bc0db7f1368bd14836e0e"
       - "--rpchost"
-      - "https://rpc.evm.dusk-7.devnet.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "gasburnertx"
       - "--max-wallets"
       - "10"
