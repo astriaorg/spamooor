@@ -1,0 +1,62 @@
+# Source: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/applicationset.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pr-spamooor
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+  - pullRequest:
+      # PR template vars for this generator:
+      # https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/  
+      # https://github.com/argoproj/argo-cd/blob/33f5714c832eebee420dad6e14a638915b9ba872/applicationset/generators/pull_request.go#L104
+      # {{ .number }}
+      # {{ .branch }}
+      # {{ .branch_slug }}
+      # {{ .target_branch_slug }}
+      # {{ .head_sha }}
+      # {{ .head_short_sha }}
+      # {{ .head_short_sha_7 }}
+      # {{ .labels }}
+      github:
+        owner: astriaorg
+        repo: astria
+        tokenRef:
+          key: token
+          secretName: github-pat
+        labels:
+          # All of the following labels are required to be set on the PR for the app to be created
+        - preview 
+      requeueAfterSeconds: 60
+  template:
+    metadata:
+      name: pr-{{.number}}-spamooor
+    spec:
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: pr-{{.number}}-spamooor
+      project: default
+      sources:
+        - repoURL: https://github.com/astriaorg/spamooor.git
+          targetRevision: 'pull/{{.number}}/head' # '{{.head_sha}}'
+          path: charts/spamooor-cronjobs
+          helm: 
+            # https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-value-precedence
+            # Order of precedence is as follows: 
+            #       lowest  -> valueFiles
+            #               -> values
+            #               -> valuesObject
+            #       highest -> parameters
+
+            valueFiles:
+            - values.yaml
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: false
+          allowEmpty: true
+        syncOptions:
+        - CreateNamespace=true
