@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spamooor-cronjobs
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: spamooor-cronjobs
+  sources:
+    - repoURL: https://github.com/astriaorg/spamooor.git
+      targetRevision: helm-chart
+      path: charts/spamooor-cronjobs
+      helm:
+        valueFiles:
+        - values.yaml
