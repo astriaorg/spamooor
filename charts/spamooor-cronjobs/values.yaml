@@ -1,7 +1,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 jobs:
-  test01:
+  erctxsjob:
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
@@ -10,7 +10,7 @@ jobs:
       repository: ghcr.io/astriaorg/spamooor
       tag: pr-12
       imagePullPolicy: Always
-    schedule: "*/10 * * * *" # run every 10mins
+    schedule: "*/3 * * * *"
     command: ["/app/spamooor"]
     args:
       - "--privkey"
@@ -21,11 +21,128 @@ jobs:
       - "--max-wallets"
       - "10"
       - "--throughput"
-      - "10"
+      - "100"
       - "--max-pending"
-      - "10"
+      - "100"
       - "--count"
-      - "50"
+      - "1000"
+      - "--timeout"
+      - "60"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+  eoatxsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: pr-12
+      imagePullPolicy: Always
+    schedule: "*/5 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "6468598bfbfe5214ef262c8631dc56cff239551cd19f04da3a215ba251832a50"
+      - "--rpchost"
+      - "https://rpc-evm.dev.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "eoatx"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "100"
+      - "--max-pending"
+      - "100"
+      - "--count"
+      - "1000"
+      - "--timeout"
+      - "60"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+  univ2txsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: pr-12
+      imagePullPolicy: Always
+    # run every 10mins
+    schedule: "*/10 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "6468598bfbfe5214ef262c8631dc56cff239551cd19f04da3a215ba251832a50"
+      - "--rpchost"
+      - "https://rpc-evm.dev.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "univ2tx"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "100"
+      - "--max-pending"
+      - "100"
+      - "--count"
+      - "1000"
+      - "--timeout"
+      - "60"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+  gasburnertxsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: pr-12
+      imagePullPolicy: Always
+    schedule: "*/30 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "6468598bfbfe5214ef262c8631dc56cff239551cd19f04da3a215ba251832a50"
+      - "--rpchost"
+      - "https://rpc-evm.dev.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "gasburnertx"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "5"
+      - "--max-pending"
+      - "5"
+      - "--count"
+      - "5"
+      - "--gas-units-to-burn"
+      - "5000000"
       - "--timeout"
       - "60"
     resources:
