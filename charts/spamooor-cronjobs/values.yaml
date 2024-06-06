@@ -7,20 +7,27 @@ jobs:
       runAsGroup: 1000
       fsGroup: 2000
     image:
-      repository: spamooor
-      tag: latest
+      repository: ghcr.io/astriaorg/spamooor
+      tag: pr-12
       imagePullPolicy: Always
     schedule: "*/10 * * * *" # run every 10mins
+    command: ["/app/spamooor"]
     args:
-      - "spamooor"
-      - "--privkey 6468598bfbfe5214ef262c8631dc56cff239551cd19f04da3a215ba251832a50"
-      - "--rpchost https://rpc-evm.dev.astria.org"
+      - "--privkey"
+      - "6468598bfbfe5214ef262c8631dc56cff239551cd19f04da3a215ba251832a50"
+      - "--rpchost"
+      - "https://rpc-evm.dev.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "erctx"
-      - "--max-wallets 10"
-      - "--throughput 10"
-      - "--max-pending 10"
-      - "--count 50"
-      - "--timeout 60"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "10"
+      - "--max-pending"
+      - "10"
+      - "--count"
+      - "50"
+      - "--timeout"
+      - "60"
     resources:
       limits:
         cpu: 50m
