@@ -10,7 +10,7 @@ jobs:
       repository: ghcr.io/astriaorg/spamooor
       tag: pr-12
       imagePullPolicy: Always
-    schedule: "*/10 * * * *" # run every 10mins
+    schedule: "*/3 * * * *" # run every 3mins
     command: ["/app/spamooor"]
     args:
       - "--privkey"
@@ -48,7 +48,7 @@ jobs:
       repository: ghcr.io/astriaorg/spamooor
       tag: pr-12
       imagePullPolicy: Always
-    schedule: "*/10 * * * *" # run every 10mins
+    schedule: "*/5 * * * *" # run every 5mins
     command: ["/app/spamooor"]
     args:
       - "--privkey"
@@ -124,7 +124,7 @@ jobs:
       repository: ghcr.io/astriaorg/spamooor
       tag: pr-12
       imagePullPolicy: Always
-    schedule: "*/10 * * * *" # run every 10mins
+    schedule: "*/30 * * * *" # run every 30mins
     command: ["/app/spamooor"]
     args:
       - "--privkey"
