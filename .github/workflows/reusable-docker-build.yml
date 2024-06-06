@@ -67,6 +67,8 @@ jobs:
             type=sha
             # set latest tag for `main` branch
             type=raw,value=latest,enable=${{ env.FULL_REF == format('refs/heads/{0}', 'main') }}
+            # set latest tag for `master` branch
+            type=raw,value=latest,enable=${{ env.FULL_REF == format('refs/heads/{0}', 'master') }}
       # - name: Build and push
       #   uses: docker/build-push-action@v4
       #   with:
