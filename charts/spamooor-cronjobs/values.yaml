@@ -127,7 +127,7 @@ jobs:
       tag: pr-12
       imagePullPolicy: Always
     # run every 10mins
-    schedule: "*/10 * * * *"
+    schedule: "*/25 * * * *"
     command: ["/app/spamooor"]
     args:
       - "--privkey"
