@@ -44,7 +44,7 @@ jobs:
       id-token: write
       packages: write
     with:
-      # depot-project-id: mhgvgvsjnx
+      depot-project-id: c3gpflm133
       package-name: spamooor
       target-binary: astria-spamooor
       tag: ${{ inputs.tag }}
