@@ -1,0 +1,38 @@
+name: Reusable Run Checker Workflow
+
+on:
+  workflow_call:
+    outputs:
+      run_docker:
+        description: If docker workflow needs to be run, will be 'true'
+        value: ${{ github.event_name != 'pull_request' || jobs.changes.outputs.docker_workflow == 'true' || contains(github.event.pull_request.labels.*.name, 'docker-build') }}
+      run_lint_charts:
+        description: If lint for charts needs to be run, will be 'true'
+        value: ${{ github.event_name != 'pull_request' || jobs.changes.outputs.lint_workflow == 'true' || jobs.changes.outputs.charts == 'true' }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      docker_workflow: ${{ steps.filters.outputs.docker_workflow }}
+      lint_workflow: ${{ steps.filters.outputs.lint_workflow }}
+      charts: ${{ steps.filters.outputs.charts }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filters
+        with:
+          list-files: json
+          filters: |
+            docker_workflow:
+              - '.github/workflows/docker-build.yml'
+              - '.github/workflows/reusable-docker-build.yml'
+              - '.dockerignore'
+            lint_workflow:
+              - '.github/workflows/lint.yml'
+            markdown:
+              - '**/*.md'
+            charts:
+              - 'charts/**'

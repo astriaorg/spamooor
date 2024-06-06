@@ -1,0 +1,158 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+jobs:
+  erctxsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: pr-12
+      imagePullPolicy: Always
+    schedule: "*/20 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "386f0870b016136deaf37a24e7fc958dfdcb3bcc7a80cb7b110eb474c88f6934"
+      - "--rpchost"
+      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "erctx"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "100"
+      - "--max-pending"
+      - "100"
+      - "--count"
+      - "1000"
+      - "--timeout"
+      - "60"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 1
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+  eoatxsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: pr-12
+      imagePullPolicy: Always
+    schedule: "*/15 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "2bff74e4775a2aabb8325554e2034e6eca26635318b2502a5049a359b4d0cd2f"
+      - "--rpchost"
+      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "eoatx"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "100"
+      - "--max-pending"
+      - "100"
+      - "--count"
+      - "1000"
+      - "--timeout"
+      - "60"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 1
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+  univ2txsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: pr-12
+      imagePullPolicy: Always
+    # run every 10mins
+    schedule: "*/25 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "64b947d57a7e2633b109875ca71acf13fe8c11237b55616ef87d4a1b907133c8"
+      - "--rpchost"
+      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "univ2tx"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "100"
+      - "--max-pending"
+      - "100"
+      - "--count"
+      - "1000"
+      - "--timeout"
+      - "60"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 1
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+  gasburnertxsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: pr-12
+      imagePullPolicy: Always
+    schedule: "*/30 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "57b5fb1ad7f7e0d6e2a085ef7cc761c0576d23760d0bc0db7f1368bd14836e0e"
+      - "--rpchost"
+      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "gasburnertx"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "5"
+      - "--max-pending"
+      - "5"
+      - "--count"
+      - "5"
+      - "--gas-units-to-burn"
+      - "5000000"
+      - "--timeout"
+      - "60"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 1
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
