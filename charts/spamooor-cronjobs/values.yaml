@@ -133,7 +133,7 @@ jobs:
       - "--privkey"
       - "6468598bfbfe5214ef262c8631dc56cff239551cd19f04da3a215ba251832a50"
       - "--rpchost"
-      - "https://rpc-evm.dev.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "https://rpc-evm.dev.astria.org"
       - "univ2tx"
       - "--max-wallets"
       - "10"
