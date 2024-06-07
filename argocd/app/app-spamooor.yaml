@@ -1,7 +1,9 @@
+# Source https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/application.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: spamooor
+  namespace: argocd
 spec:
   project: default
   destination:
@@ -9,8 +11,28 @@ spec:
     namespace: spamooor-cronjobs
   source:
     repoURL: https://github.com/astriaorg/spamooor.git
-    targetRevision: helm-chart
+    targetRevision: master
     path: charts/spamooor-cronjobs
     helm:
       valueFiles:
       - values.yaml
+      # parameters:  # Paramters to override default values in values.yaml
+      # - name: jobs.erctxsjob.image.tag
+      #   value: latest
+      # - name: jobs.eoatxsjob.image.tag
+      #   value: latest
+      # - name: jobs.univ2txsjob.image.tag
+      #   value: latest
+      # - name: jobs.gasburnertxsjob.image.tag
+      #   value: latest
+  syncPolicy:
+    automated:
+      prune: true
+      allowEmpty: true
+    syncOptions:
+    - CreateNamespace=true
+    managedNamespaceMetadata:
+      labels:
+        argocd.argoproj.io/instance: spamooor
+      annotations:
+        argocd.argoproj.io/tracking-id: spamooor/Namespace:spamooor-cronjobs

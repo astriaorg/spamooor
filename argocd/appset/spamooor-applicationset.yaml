@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: pr-spamooor
+  name: spamooor-preview
   namespace: argocd
 spec:
   goTemplate: true
@@ -32,27 +32,34 @@ spec:
       requeueAfterSeconds: 60
   template:
     metadata:
-      name: pr-{{.number}}-spamooor
+      name: spamooor-pr-{{.number}}
     spec:
       destination:
         server: https://kubernetes.default.svc
-        namespace: pr-{{.number}}-spamooor
+        namespace: spamooor-pr-{{.number}}
       project: default
-      sources:
-        - repoURL: https://github.com/astriaorg/spamooor.git
-          targetRevision: 'pull/{{.number}}/head' # '{{.head_sha}}'
-          path: charts/spamooor-cronjobs
-          helm: 
-            # https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-value-precedence
-            # Order of precedence is as follows: 
-            #       lowest  -> valueFiles
-            #               -> values
-            #               -> valuesObject
-            #       highest -> parameters
-
-            valueFiles:
-            - values.yaml
-
+      source:
+        repoURL: https://github.com/astriaorg/spamooor.git
+        targetRevision: 'pull/{{.number}}/head' # '{{.head_sha}}'
+        path: charts/spamooor-cronjobs
+        helm: 
+          # https://argo-cd.readthedocs.io/en/stable/user-guide/helm/#helm-value-precedence
+          # Order of precedence is as follows: 
+          #       lowest  -> valueFiles
+          #               -> values
+          #               -> valuesObject
+          #       highest -> parameters
+          valueFiles:
+          - values.yaml
+          parameters:  # Paramters to override default values in values.yaml
+          - name: jobs.erctxsjob.image.tag
+            value: pr-{{.number}}
+          - name: jobs.eoatxsjob.image.tag
+            value: pr-{{.number}}
+          - name: jobs.univ2txsjob.image.tag
+            value: pr-{{.number}}
+          - name: jobs.gasburnertxsjob.image.tag
+            value: pr-{{.number}}
       syncPolicy:
         automated:
           prune: true
