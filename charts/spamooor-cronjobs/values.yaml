@@ -131,9 +131,9 @@ jobs:
     command: ["/app/spamooor"]
     args:
       - "--privkey"
-      - "6468598bfbfe5214ef262c8631dc56cff239551cd19f04da3a215ba251832a50"
+      - "64b947d57a7e2633b109875ca71acf13fe8c11237b55616ef87d4a1b907133c8"
       - "--rpchost"
-      - "https://rpc-evm.dev.astria.org"
+      - "https://rpc.evm.dusk-7.devnet.astria.org" # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "univ2tx"
       - "--max-wallets"
       - "10"
