@@ -25,7 +25,7 @@ jobs:
       - "--max-pending"
       - "100"
       - "--count"
-      - "1000"
+      - "10000"
       - "--timeout"
       - "60"
     resources:
@@ -63,7 +63,47 @@ jobs:
       - "--max-pending"
       - "100"
       - "--count"
-      - "1000"
+      - "10000"
+      - "--timeout"
+      - "60"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 1
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
+  gasburnertxsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: latest
+      imagePullPolicy: Always
+    schedule: "*/30 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "57b5fb1ad7f7e0d6e2a085ef7cc761c0576d23760d0bc0db7f1368bd14836e0e"
+      - "--rpchost"
+      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "gasburnertx"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "5"
+      - "--max-pending"
+      - "5"
+      - "--count"
+      - "100"
+      - "--gas-units-to-burn"
+      - "5000000"
       - "--timeout"
       - "60"
     resources:
@@ -102,7 +142,7 @@ jobs:
       - "--max-pending"
       - "100"
       - "--count"
-      - "1000"
+      - "10000"
       - "--timeout"
       - "60"
     resources:
@@ -113,46 +153,6 @@ jobs:
         cpu: 50m
         memory: 256Mi
     failedJobsHistoryLimit: 1
-    successfulJobsHistoryLimit: 1
-    concurrencyPolicy: Forbid
-    restartPolicy: Never
-  gasburnertxsjob:
-    securityContext:
-      runAsUser: 1000
-      runAsGroup: 1000
-      fsGroup: 2000
-    image:
-      repository: ghcr.io/astriaorg/spamooor
-      tag: latest
-      imagePullPolicy: Always
-    schedule: "*/30 * * * *"
-    command: ["/app/spamooor"]
-    args:
-      - "--privkey"
-      - "57b5fb1ad7f7e0d6e2a085ef7cc761c0576d23760d0bc0db7f1368bd14836e0e"
-      - "--rpchost"
-      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
-      - "gasburnertx"
-      - "--max-wallets"
-      - "10"
-      - "--throughput"
-      - "5"
-      - "--max-pending"
-      - "5"
-      - "--count"
-      - "5"
-      - "--gas-units-to-burn"
-      - "5000000"
-      - "--timeout"
-      - "60"
-    resources:
-      limits:
-        cpu: 50m
-        memory: 256Mi
-      requests:
-        cpu: 50m
-        memory: 256Mi
-    failedJobsHistoryLimit: 1
-    successfulJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 3
     concurrencyPolicy: Forbid
     restartPolicy: Never
