@@ -124,7 +124,7 @@ jobs:
       fsGroup: 2000
     image:
       repository: ghcr.io/astriaorg/spamooor
-      tag: pr-12
+      tag: latest
       imagePullPolicy: Always
     # run every 10mins
     schedule: "*/25 * * * *"
