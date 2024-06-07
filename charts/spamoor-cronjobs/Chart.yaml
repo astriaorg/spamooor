@@ -4,3 +4,11 @@ description: A Helm chart for Kubernetes
 name: spamoor-cronjobs
 type: application
 version: 0.1.0
+
+maintainers:
+  - name: bharath-123
+    url: astria.org
+  - name: aajimal
+    url: astria.org
+  - name: joroshiba
+    url: astria.org
