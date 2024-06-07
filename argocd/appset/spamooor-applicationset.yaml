@@ -32,11 +32,11 @@ spec:
       requeueAfterSeconds: 60
   template:
     metadata:
-      name: spamooor-pr-{{.number}}
+      name: spamooor-{{.number}}
     spec:
       destination:
         server: https://kubernetes.default.svc
-        namespace: spamooor-pr-{{.number}}
+        namespace: spamooor-{{.number}}
       project: default
       source:
         repoURL: https://github.com/astriaorg/spamooor.git
