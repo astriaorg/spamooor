@@ -25,7 +25,7 @@ jobs:
       - "--max-pending"
       - "100"
       - "--count"
-      - "1000"
+      - "10000"
       - "--timeout"
       - "60"
     resources:
@@ -63,7 +63,7 @@ jobs:
       - "--max-pending"
       - "100"
       - "--count"
-      - "1000"
+      - "10000"
       - "--timeout"
       - "60"
     resources:
@@ -101,7 +101,7 @@ jobs:
       - "--max-pending"
       - "5"
       - "--count"
-      - "5"
+      - "100"
       - "--gas-units-to-burn"
       - "5000000"
       - "--timeout"
@@ -142,7 +142,7 @@ jobs:
       - "--max-pending"
       - "100"
       - "--count"
-      - "1000"
+      - "10000"
       - "--timeout"
       - "60"
     resources:
