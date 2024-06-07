@@ -22,7 +22,7 @@ spec:
       # {{ .labels }}
       github:
         owner: astriaorg
-        repo: astria
+        repo: spamooor  # Repository to check for PRs
         tokenRef:
           key: token
           secretName: github-pat
@@ -32,11 +32,11 @@ spec:
       requeueAfterSeconds: 60
   template:
     metadata:
-      name: spamooor-pr-{{.number}}
+      name: spamooor-{{.number}}
     spec:
       destination:
         server: https://kubernetes.default.svc
-        namespace: spamooor-pr-{{.number}}
+        namespace: spamooor-{{.number}}
       project: default
       source:
         repoURL: https://github.com/astriaorg/spamooor.git
@@ -61,9 +61,13 @@ spec:
           - name: jobs.gasburnertxsjob.image.tag
             value: pr-{{.number}}
       syncPolicy:
-        automated:
-          prune: true
-          selfHeal: false
-          allowEmpty: true
+        automated: {}
         syncOptions:
         - CreateNamespace=true
+        managedNamespaceMetadata:
+          labels:
+            # argocd.argoproj.io/instance: <$ARGOCD_APP_NAME>
+            argocd.argoproj.io/instance: spamooor-{{.number}}
+          annotations:
+            # argocd.argoproj.io/tracking-id: <$ARGOCD_APP_NAME>:/Namespace:$ARGOCD_APP_NAMESPACE
+            argocd.argoproj.io/tracking-id: spamooor-{{.number}}/Namespace:spamooor-{{.number}}
