@@ -26,13 +26,13 @@ spec:
       # - name: jobs.gasburnertxsjob.image.tag
       #   value: latest
   syncPolicy:
-    automated:
-      prune: true
-      allowEmpty: true
+    automated: {}
     syncOptions:
     - CreateNamespace=true
     managedNamespaceMetadata:
       labels:
+        # argocd.argoproj.io/instance: <$ARGOCD_APP_NAME>
         argocd.argoproj.io/instance: spamooor
       annotations:
+        # argocd.argoproj.io/tracking-id: <$ARGOCD_APP_NAME>:/Namespace:$ARGOCD_APP_NAMESPACE
         argocd.argoproj.io/tracking-id: spamooor/Namespace:spamooor-cronjobs
