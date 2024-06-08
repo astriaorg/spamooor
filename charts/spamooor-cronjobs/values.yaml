@@ -10,7 +10,7 @@ jobs:
       repository: ghcr.io/astriaorg/spamooor
       tag: latest
       imagePullPolicy: Always
-    schedule: "*/20 * * * *"
+    schedule: "*/25 * * * *"
     command: ["/app/spamooor"]
     args:
       - "--privkey"
@@ -24,6 +24,10 @@ jobs:
       - "100"
       - "--max-pending"
       - "100"
+      - "--basefee"
+      - "100"
+      - "--tipfee"
+      - "20"
       - "--count"
       - "10000"
       - "--timeout"
@@ -62,6 +66,10 @@ jobs:
       - "100"
       - "--max-pending"
       - "100"
+      - "--basefee"
+      - "100"
+      - "--tipfee"
+      - "20"
       - "--count"
       - "10000"
       - "--timeout"
@@ -86,7 +94,7 @@ jobs:
       repository: ghcr.io/astriaorg/spamooor
       tag: latest
       imagePullPolicy: Always
-    schedule: "*/30 * * * *"
+    schedule: "*/35 * * * *"
     command: ["/app/spamooor"]
     args:
       - "--privkey"
@@ -104,6 +112,10 @@ jobs:
       - "100"
       - "--gas-units-to-burn"
       - "5000000"
+      - "--basefee"
+      - "100"
+      - "--tipfee"
+      - "20"
       - "--timeout"
       - "60"
     resources:
@@ -126,8 +138,7 @@ jobs:
       repository: ghcr.io/astriaorg/spamooor
       tag: latest
       imagePullPolicy: Always
-    # run every 10mins
-    schedule: "*/25 * * * *"
+    schedule: "*/45 * * * *"
     command: ["/app/spamooor"]
     args:
       - "--privkey"
@@ -143,6 +154,10 @@ jobs:
       - "100"
       - "--count"
       - "10000"
+      - "--basefee"
+      - "100"
+      - "--tipfee"
+      - "20"
       - "--timeout"
       - "60"
     resources:
