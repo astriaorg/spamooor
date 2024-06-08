@@ -62,6 +62,12 @@ spec:
             value: pr-{{.number}}
       syncPolicy:
         automated: {}
+        retry:  # Retry/wait because sync will probably fail until the docker image is built and pushed
+          limit: 5
+          backoff:
+            duration: 15s
+            factor: 2  # a factor to multiply the base duration after each failed retry
+            maxDuration: 5m  # the maximum amount of time allowed for the backoff strategy (15s, 30s, 1m, 2m, 4m < 5m)
         syncOptions:
         - CreateNamespace=true
         managedNamespaceMetadata:
