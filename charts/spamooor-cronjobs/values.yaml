@@ -15,16 +15,16 @@ jobs:
     command: ["/app/spamooor"]
     args:
       - "--privkey"
-      - "f5419c13c5f5ee39edfebc98a5c595face29efdc50b30b2aae377c220e58d629"
+      - "2bff74e4775a2aabb8325554e2034e6eca26635318b2502a5049a359b4d0cd2f"
       - "--rpchost"
       - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "erctx"
       - "--max-wallets"
       - "10"
       - "--throughput"
-      - "500"
+      - "1000"
       - "--max-pending"
-      - "500"
+      - "1000"
       - "--count"
       - "15000"
       - "--timeout"
@@ -53,16 +53,16 @@ jobs:
     command: ["/app/spamooor"]
     args:
       - "--privkey"
-      - "a44bc2bb3930e826a602011e0e12e783d6e48d8163042db654039cbbffdd4411"
+      - "64b947d57a7e2633b109875ca71acf13fe8c11237b55616ef87d4a1b907133c8"
       - "--rpchost"
       - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "eoatx"
       - "--max-wallets"
       - "10"
       - "--throughput"
-      - "500"
+      - "1000"
       - "--max-pending"
-      - "500"
+      - "1000"
       - "--count"
       - "15000"
       - "--timeout"
@@ -91,7 +91,7 @@ jobs:
     command: ["/app/spamooor"]
     args:
       - "--privkey"
-      - "d4d14cafa5c9ab89b8b41479e7c7f9f14999949a40cbcc13e6df9b3782251030"
+      - "6468598bfbfe5214ef262c8631dc56cff239551cd19f04da3a215ba251832a50"
       - "--rpchost"
       - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "gasburnertx"
@@ -131,16 +131,16 @@ jobs:
     command: ["/app/spamooor"]
     args:
       - "--privkey"
-      - "6f4482a86833dfbd81164fd33f5d4da76c46b25e9a1bd1c8a2f28851a63739d8"
+      - "57b5fb1ad7f7e0d6e2a085ef7cc761c0576d23760d0bc0db7f1368bd14836e0e"
       - "--rpchost"
       - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "univ2tx"
       - "--max-wallets"
       - "10"
       - "--throughput"
-      - "500"
+      - "1000"
       - "--max-pending"
-      - "500"
+      - "1000"
       - "--count"
       - "15000"
       - "--timeout"
