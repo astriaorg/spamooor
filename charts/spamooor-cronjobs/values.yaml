@@ -1,5 +1,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
+# Note that these private keys will never contain any real money. They are used for testing purposes only.
 jobs:
   erctxsjob:
     securityContext:
@@ -14,7 +15,7 @@ jobs:
     command: ["/app/spamooor"]
     args:
       - "--privkey"
-      - "386f0870b016136deaf37a24e7fc958dfdcb3bcc7a80cb7b110eb474c88f6934"
+      - "f5419c13c5f5ee39edfebc98a5c595face29efdc50b30b2aae377c220e58d629"
       - "--rpchost"
       - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "erctx"
@@ -24,14 +25,10 @@ jobs:
       - "500"
       - "--max-pending"
       - "500"
-      - "--basefee"
-      - "200"
-      - "--tipfee"
-      - "50"
       - "--count"
       - "15000"
       - "--timeout"
-      - "60"
+      - "120"
     resources:
       limits:
         cpu: 50m
@@ -56,7 +53,7 @@ jobs:
     command: ["/app/spamooor"]
     args:
       - "--privkey"
-      - "2bff74e4775a2aabb8325554e2034e6eca26635318b2502a5049a359b4d0cd2f"
+      - "a44bc2bb3930e826a602011e0e12e783d6e48d8163042db654039cbbffdd4411"
       - "--rpchost"
       - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "eoatx"
@@ -66,14 +63,10 @@ jobs:
       - "500"
       - "--max-pending"
       - "500"
-      - "--basefee"
-      - "200"
-      - "--tipfee"
-      - "50"
       - "--count"
       - "15000"
       - "--timeout"
-      - "60"
+      - "120"
     resources:
       limits:
         cpu: 50m
@@ -98,7 +91,7 @@ jobs:
     command: ["/app/spamooor"]
     args:
       - "--privkey"
-      - "57b5fb1ad7f7e0d6e2a085ef7cc761c0576d23760d0bc0db7f1368bd14836e0e"
+      - "d4d14cafa5c9ab89b8b41479e7c7f9f14999949a40cbcc13e6df9b3782251030"
       - "--rpchost"
       - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "gasburnertx"
@@ -112,12 +105,8 @@ jobs:
       - "50"
       - "--gas-units-to-burn"
       - "5000000"
-      - "--basefee"
-      - "200"
-      - "--tipfee"
-      - "50"
       - "--timeout"
-      - "60"
+      - "120"
     resources:
       limits:
         cpu: 50m
@@ -142,7 +131,7 @@ jobs:
     command: ["/app/spamooor"]
     args:
       - "--privkey"
-      - "64b947d57a7e2633b109875ca71acf13fe8c11237b55616ef87d4a1b907133c8"
+      - "6f4482a86833dfbd81164fd33f5d4da76c46b25e9a1bd1c8a2f28851a63739d8"
       - "--rpchost"
       - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "univ2tx"
@@ -154,12 +143,8 @@ jobs:
       - "500"
       - "--count"
       - "15000"
-      - "--basefee"
-      - "200"
-      - "--tipfee"
-      - "50"
       - "--timeout"
-      - "60"
+      - "120"
     resources:
       limits:
         cpu: 50m
