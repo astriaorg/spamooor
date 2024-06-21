@@ -3,6 +3,8 @@ package erctx
 import (
 	"crypto/rand"
 	"fmt"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"math/big"
 	"os"
 	"sync"
@@ -22,22 +24,25 @@ import (
 )
 
 type ScenarioOptions struct {
-	TotalCount   uint64
-	Throughput   uint64
-	MaxPending   uint64
-	MaxWallets   uint64
-	Timeout      uint64
-	BaseFee      uint64
-	TipFee       uint64
-	Amount       uint64
-	RandomAmount bool
-	RandomTarget bool
+	TotalCount      uint64
+	Throughput      uint64
+	MaxPending      uint64
+	MaxWallets      uint64
+	Timeout         uint64
+	BaseFee         uint64
+	TipFee          uint64
+	Amount          uint64
+	RandomAmount    bool
+	RandomTarget    bool
+	ComposerAddress string
+	SendViaComposer bool
 }
 
 type Scenario struct {
-	options ScenarioOptions
-	logger  *logrus.Entry
-	tester  *tester.Tester
+	options      ScenarioOptions
+	logger       *logrus.Entry
+	tester       *tester.Tester
+	composerConn *grpc.ClientConn
 
 	contractAddr common.Address
 
@@ -63,6 +68,8 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flags.Uint64Var(&s.options.Amount, "amount", 20, "Transfer amount per transaction (in gwei)")
 	flags.BoolVar(&s.options.RandomAmount, "random-amount", false, "Use random amounts for transactions (with --amount as limit)")
 	flags.BoolVar(&s.options.RandomTarget, "random-target", false, "Use random to addresses for transactions")
+	flags.StringVar(&s.options.ComposerAddress, "composer-address", "localhost:50051", "Address of the composer service")
+	flags.BoolVar(&s.options.SendViaComposer, "send-via-composer", false, "Send transactions via composer")
 	return nil
 }
 
@@ -91,10 +98,18 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 		s.pendingChan = make(chan bool, s.options.MaxPending)
 	}
 
+	if s.options.SendViaComposer {
+		conn, err := grpc.NewClient(s.options.ComposerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			return err
+		}
+
+		s.composerConn = conn
+	}
+
 	return nil
 }
 
-// TODO - move contract deployment to Setup
 func (s *Scenario) Setup(testerCfg *tester.Tester) error {
 	s.logger.Infof("setting up scenario: erctx")
 	s.tester = testerCfg
@@ -309,9 +324,16 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		return nil, nil, err
 	}
 
-	err = client.SendTransaction(tx)
-	if err != nil {
-		return nil, client, err
+	if s.options.SendViaComposer {
+		err = client.SendTransactionViaComposer(tx, s.composerConn)
+		if err != nil {
+			return nil, client, err
+		}
+	} else {
+		err = client.SendTransaction(tx)
+		if err != nil {
+			return nil, client, err
+		}
 	}
 
 	s.pendingWGroup.Add(1)
