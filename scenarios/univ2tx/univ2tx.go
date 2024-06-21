@@ -14,6 +14,8 @@ import (
 	"github.com/holiman/uint256"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"math/big"
 	"os"
 	"sync"
@@ -31,12 +33,15 @@ type ScenarioOptions struct {
 	DaiMintAmount      uint64
 	AmountToSwap       uint64
 	RandomAmountToSwap bool
+	ComposerAddress    string
+	SendViaComposer    bool
 }
 
 type Scenario struct {
-	options ScenarioOptions
-	logger  *logrus.Entry
-	tester  *tester.Tester
+	options      ScenarioOptions
+	logger       *logrus.Entry
+	tester       *tester.Tester
+	composerConn *grpc.ClientConn
 
 	uniswapFactoryContract common.Address
 	wethContract           common.Address
@@ -68,6 +73,8 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flag.Uint64Var(&s.options.DaiMintAmount, "dai-mint-amount", 1, "Amount of dai to mint for each child wallet (in ethers)")
 	flag.Uint64Var(&s.options.AmountToSwap, "amount-to-swap", 1, "Amount of tokens to swap in each transaction(in gwei)")
 	flag.BoolVar(&s.options.RandomAmountToSwap, "random-amount-to-swap", false, "Randomize the amount of tokens to swap in each transaction(in gwei)")
+	flags.StringVar(&s.options.ComposerAddress, "composer-address", "localhost:50051", "Address of the composer service")
+	flags.BoolVar(&s.options.SendViaComposer, "send-via-composer", false, "Send transactions via composer")
 
 	return nil
 }
@@ -100,6 +107,13 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 	if s.options.DaiMintAmount > 0 {
 		s.daiMintAmount = big.NewInt(0).Mul(big.NewInt(int64(s.options.DaiMintAmount)), big.NewInt(1000000000000000000))
 	}
+
+	conn, err := grpc.NewClient(s.options.ComposerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return err
+	}
+
+	s.composerConn = conn
 
 	return nil
 }
@@ -388,9 +402,16 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		return nil, nil, err
 	}
 
-	err = client.SendTransaction(tx)
-	if err != nil {
-		return nil, client, err
+	if s.options.SendViaComposer {
+		err = client.SendTransactionViaComposer(tx, s.composerConn)
+		if err != nil {
+			return nil, client, err
+		}
+	} else {
+		err = client.SendTransaction(tx)
+		if err != nil {
+			return nil, client, err
+		}
 	}
 
 	s.pendingWGroup.Add(1)
