@@ -256,22 +256,6 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 	var txCallData []byte
 	txCallData = append(txCallData, methodID...)
 
-	//revertingTxContract, err := s.GetRevertingContract()
-	//if err != nil {
-	//	return nil, nil, err
-	//}
-
-	//transactor, err := s.GetTransactor(wallet, true, big.NewInt(0))
-	//if err != nil {
-	//	return nil, nil, err
-	//}
-
-	//revertingTx, err := revertingTxContract.AlwaysRevert(transactor)
-	//if err != nil {
-	//	s.logger.Errorf("could not generate transaction: %v", err)
-	//	return nil, nil, err
-	//}
-
 	txData, err := txbuilder.DynFeeTx(&txbuilder.TxMetadata{
 		GasFeeCap: uint256.MustFromBig(feeCap),
 		GasTipCap: uint256.MustFromBig(tipCap),
