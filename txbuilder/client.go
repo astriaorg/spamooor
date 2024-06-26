@@ -154,20 +154,18 @@ func (client *Client) SendTransaction(tx *types.Transaction) error {
 	return client.client.SendTransaction(client.getContext(), tx)
 }
 
-func (client *Client) SendTransactionViaComposer(tx *types.Transaction, conn *grpc.ClientConn) error {
+func (client *Client) SendTransactionViaComposer(tx *types.Transaction, conn *grpc.ClientConn, rollupId string) error {
 	binaryTx, err := tx.MarshalBinary()
 	if err != nil {
 		return err
 	}
 
-	client.logger.Infof("Sending tx via composer!")
-
-	rollupId := sha256.Sum256([]byte("astria-dusk-7-evm"))
+	hashedRollupId := sha256.Sum256([]byte(rollupId))
 
 	grpcCollectorServiceClient := composerv1alpha1grpc.NewGrpcCollectorServiceClient(conn)
 	// if the request succeeds, then an empty response will be returned which can be ignored for now
 	_, err = grpcCollectorServiceClient.SubmitRollupTransaction(context.Background(), &astriaComposerPb.SubmitRollupTransactionRequest{
-		RollupId: rollupId[:],
+		RollupId: hashedRollupId[:],
 		Data:     binaryTx,
 	})
 	if err != nil {

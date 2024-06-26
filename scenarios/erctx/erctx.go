@@ -36,6 +36,7 @@ type ScenarioOptions struct {
 	RandomTarget    bool
 	ComposerAddress string
 	SendViaComposer bool
+	RollupId        string
 }
 
 type Scenario struct {
@@ -70,6 +71,8 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flags.BoolVar(&s.options.RandomTarget, "random-target", false, "Use random to addresses for transactions")
 	flags.StringVar(&s.options.ComposerAddress, "composer-address", "localhost:50051", "Address of the composer service")
 	flags.BoolVar(&s.options.SendViaComposer, "send-via-composer", false, "Send transactions via composer")
+	flags.StringVar(&s.options.RollupId, "rollup-id", "", "The rollup id of the evm rollup")
+
 	return nil
 }
 
@@ -325,7 +328,7 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 	}
 
 	if s.options.SendViaComposer {
-		err = client.SendTransactionViaComposer(tx, s.composerConn)
+		err = client.SendTransactionViaComposer(tx, s.composerConn, s.options.RollupId)
 		if err != nil {
 			return nil, client, err
 		}
