@@ -82,50 +82,50 @@ jobs:
     successfulJobsHistoryLimit: 1
     concurrencyPolicy: Forbid
     restartPolicy: Never
- gasburnertxsjob:
-   securityContext:
-     runAsUser: 1000
-     runAsGroup: 1000
-     fsGroup: 2000
-   image:
-     repository: ghcr.io/astriaorg/spamooor
-     tag: latest
-     imagePullPolicy: Always
-   schedule: "*/35 * * * *"
-   command: ["/app/spamooor"]
-   args:
-     - "--privkey"
-     - "a4c4f27ff1617503ad5c7be0dae883cd62faf1c49dede8011da7ecd11b60e5e5" # addr: 0x80E4E7d32E73Df24BdE4baE970F908e8Ff9092dB
-     - "--rpchost"
-     - "https://rpc-evm.dev.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
-     - "gasburnertx"
-     - "--max-wallets"
-     - "10"
-     - "--throughput"
-     - "5"
-     - "--max-pending"
-     - "5"
-     - "--basefee"
-     - "100"
-     - "--tipfee"
-     - "10"
-     - "--count"
-     - "50"
-     - "--gas-units-to-burn"
-     - "5000000"
-     - "--timeout"
-     - "120"
-   resources:
-     limits:
-       cpu: 50m
-       memory: 256Mi
-     requests:
-       cpu: 50m
-       memory: 256Mi
-   failedJobsHistoryLimit: 1
-   successfulJobsHistoryLimit: 1
-   concurrencyPolicy: Forbid
-   restartPolicy: Never
+  gasburnertxsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: latest
+      imagePullPolicy: Always
+    schedule: "*/35 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "a4c4f27ff1617503ad5c7be0dae883cd62faf1c49dede8011da7ecd11b60e5e5" # addr: 0x80E4E7d32E73Df24BdE4baE970F908e8Ff9092dB
+      - "--rpchost"
+      - "https://rpc-evm.dev.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "gasburnertx"
+      - "--max-wallets"
+      - "10"
+      - "--throughput"
+      - "5"
+      - "--max-pending"
+      - "5"
+      - "--basefee"
+      - "100"
+      - "--tipfee"
+      - "10"
+      - "--count"
+      - "50"
+      - "--gas-units-to-burn"
+      - "5000000"
+      - "--timeout"
+      - "120"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 1
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
   univ2txsjob:
     securityContext:
       runAsUser: 1000
