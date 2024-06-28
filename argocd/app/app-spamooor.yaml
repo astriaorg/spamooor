@@ -11,7 +11,7 @@ spec:
     namespace: spamooor-cronjobs
   source:
     repoURL: https://github.com/astriaorg/spamooor.git
-    targetRevision: quasystaty1/dev-dusk-8
+    targetRevision: quasystaty1/dusk-8
     path: charts/spamooor-cronjobs
     helm:
       valueFiles:
