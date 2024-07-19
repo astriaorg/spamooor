@@ -153,9 +153,6 @@ func (s *Scenario) sendTx() error {
 
 func SendSequencerTransferViaComposer(conn *grpc.ClientConn) error {
 	grpcCollectorServiceClient := grpc_receiver.NewSequencerGrpcCollectorServiceClient(conn)
-	//
-	//// get a random value b/w 10000 and 10000000
-	//amount := uint64(10000 + rand.Intn(10000000-10000))
 
 	_, err := grpcCollectorServiceClient.SubmitSequencerTransaction(context.Background(), &grpc_receiver.SubmitSequencerTransactionRequest{Action: &grpc_receiver.Action{Value: &grpc_receiver.Action_TransferAction{TransferAction: &grpc_receiver.TransferAction{
 		To: &grpc_receiver.Address{Bech32M: "astria1gv8682e7m9dwwrm7y8u9gzpdv27ypja8ktf0tg"},
