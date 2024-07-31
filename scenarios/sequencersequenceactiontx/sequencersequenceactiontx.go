@@ -25,6 +25,7 @@ type ScenarioOptions struct {
 	MaxWallets      uint64
 	ComposerAddress string
 	NoOfBytes       uint64
+	RollupId        string
 }
 
 type Scenario struct {
@@ -46,6 +47,7 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flags.Uint64Var(&s.options.MaxWallets, "max-wallets", 0, "Maximum number of child wallets to use")
 	flags.StringVar(&s.options.ComposerAddress, "composer-address", "localhost:50051", "Address of the composer service")
 	flags.Uint64Var(&s.options.NoOfBytes, "no-of-bytes", 0, "Number of bytes to send in the sequence action")
+	flags.StringVar(&s.options.RollupId, "rollup-id", "", "Rollup ID to send the sequence action to")
 
 	return nil
 }
@@ -146,7 +148,7 @@ func (s *Scenario) Run() error {
 
 func (s *Scenario) sendTx() error {
 
-	err := SendSequencerTransferViaComposer(s.composerConn, s.options.NoOfBytes)
+	err := SendSequencerTransferViaComposer(s.composerConn, s.options.NoOfBytes, s.options.RollupId)
 	if err != nil {
 		return err
 	}
@@ -154,10 +156,10 @@ func (s *Scenario) sendTx() error {
 	return nil
 }
 
-func SendSequencerTransferViaComposer(conn *grpc.ClientConn, noOfBytes uint64) error {
+func SendSequencerTransferViaComposer(conn *grpc.ClientConn, noOfBytes uint64, rollupId string) error {
 	grpcCollectorServiceClient := grpc_receiver.NewSequencerGrpcCollectorServiceClient(conn)
 
-	hashedRollupId := sha256.Sum256([]byte("random-rollup-id"))
+	hashedRollupId := sha256.Sum256([]byte(rollupId))
 
 	// create a random array of bytes of size noOfBytes
 	data := make([]byte, noOfBytes)

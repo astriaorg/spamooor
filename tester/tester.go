@@ -63,7 +63,7 @@ func (tester *Tester) Start(seed string) error {
 	}).Infof("starting blob testing tool")
 
 	fmt.Printf("Tester scenario is %s\n", tester.config.Scenario)
-	if tester.config.Scenario != "sequencertransfertx" {
+	if tester.config.Scenario != "sequencertransfertx" && tester.config.Scenario != "sequencersequenceactiontx" {
 		// prepare clients
 		err = tester.PrepareClients()
 		if err != nil {
