@@ -36,6 +36,7 @@ type TesterConfig struct {
 	WalletCount   uint64       // number of child wallets to generate & use (based on walletPrivkey)
 	WalletPrefund *uint256.Int // amount of funds to send to each child wallet
 	WalletMinfund *uint256.Int // min amount of funds child wallets should hold - refill with walletPrefund if lower
+	Scenario      string
 }
 
 func NewTester(config *TesterConfig) *Tester {
@@ -61,30 +62,33 @@ func (tester *Tester) Start(seed string) error {
 		"version": utils.GetBuildVersion(),
 	}).Infof("starting blob testing tool")
 
-	// prepare clients
-	err = tester.PrepareClients()
-	if err != nil {
-		return err
-	}
-	err = tester.watchClientStatus()
-	if err != nil {
-		return err
-	}
-	// watch client status
-	go tester.watchClientStatusLoop()
+	fmt.Printf("Tester scenario is %s\n", tester.config.Scenario)
+	if tester.config.Scenario != "sequencertransfertx" {
+		// prepare clients
+		err = tester.PrepareClients()
+		if err != nil {
+			return err
+		}
+		err = tester.watchClientStatus()
+		if err != nil {
+			return err
+		}
+		// watch client status
+		go tester.watchClientStatusLoop()
 
-	tester.logger.Infof("preparing root wallet!")
-	err = tester.PrepareRootWallet()
-	if err != nil {
-		return err
-	}
+		tester.logger.Infof("preparing root wallet!")
+		err = tester.PrepareRootWallet()
+		if err != nil {
+			return err
+		}
 
-	// prepare wallets with Eth
-	err = tester.PrepareWallets(seed)
-	if err != nil {
-		return err
+		// prepare wallets with Eth
+		err = tester.PrepareWallets(seed)
+		if err != nil {
+			return err
+		}
+		go tester.watchWalletBalancesLoop()
 	}
-	go tester.watchWalletBalancesLoop()
 
 	return nil
 }
