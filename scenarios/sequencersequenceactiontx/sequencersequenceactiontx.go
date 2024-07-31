@@ -2,6 +2,7 @@ package sequencersequenceactiontx
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	grpc_receiver "github.com/astriaorg/spamooor/protos"
 	"sync"
@@ -35,7 +36,7 @@ type Scenario struct {
 
 func NewScenario() scenariotypes.Scenario {
 	return &Scenario{
-		logger: logrus.WithField("scenario", "sequencertransfertx"),
+		logger: logrus.WithField("scenario", "sequencersequenceactiontx"),
 	}
 }
 
@@ -94,7 +95,7 @@ func (s *Scenario) Run() error {
 	txCount := uint64(0)
 	startTime := time.Now()
 
-	s.logger.Infof("starting scenario: sequencertransfertx")
+	s.logger.Infof("starting scenario: sequencersequenceactiontx")
 
 	for {
 		txIdx := txIdxCounter
@@ -156,6 +157,8 @@ func (s *Scenario) sendTx() error {
 func SendSequencerTransferViaComposer(conn *grpc.ClientConn, noOfBytes uint64) error {
 	grpcCollectorServiceClient := grpc_receiver.NewSequencerGrpcCollectorServiceClient(conn)
 
+	hashedRollupId := sha256.Sum256([]byte("random-rollup-id"))
+
 	// create a random array of bytes of size noOfBytes
 	data := make([]byte, noOfBytes)
 	// fill it with random data
@@ -164,8 +167,8 @@ func SendSequencerTransferViaComposer(conn *grpc.ClientConn, noOfBytes uint64) e
 	}
 
 	_, err := grpcCollectorServiceClient.SubmitSequencerTransaction(context.Background(), &grpc_receiver.SubmitSequencerTransactionRequest{Action: &grpc_receiver.Action{Value: &grpc_receiver.Action_SequenceAction{SequenceAction: &grpc_receiver.SequenceAction{
-		RollupId: &grpc_receiver.RollupId{Inner: []byte("astria")},
-		Data:     make([]byte, 0),
+		RollupId: &grpc_receiver.RollupId{Inner: hashedRollupId[:]},
+		Data:     data,
 		FeeAsset: "nria",
 	}}}})
 	if err != nil {

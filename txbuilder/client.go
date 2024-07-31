@@ -154,11 +154,6 @@ func (client *Client) SendTransaction(tx *types.Transaction) error {
 }
 
 func (client *Client) SendTransactionViaComposer(tx *types.Transaction, conn *grpc.ClientConn, rollupId string) error {
-	//binaryTx, err := tx.MarshalBinary()
-	//if err != nil {
-	//	return err
-	//}
-
 	hashedRollupId := sha256.Sum256([]byte(rollupId))
 
 	data := make([]byte, 190000)
