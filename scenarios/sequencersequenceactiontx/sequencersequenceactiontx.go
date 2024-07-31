@@ -1,8 +1,7 @@
-package sequencertransfertx
+package sequencersequenceactiontx
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	grpc_receiver "github.com/astriaorg/spamooor/protos"
 	"sync"
@@ -20,11 +19,11 @@ import (
 )
 
 type ScenarioOptions struct {
-	TotalCount               uint64
-	Throughput               uint64
-	MaxWallets               uint64
-	ComposerAddress          string
-	SequencerAddressToSendTo string
+	TotalCount      uint64
+	Throughput      uint64
+	MaxWallets      uint64
+	ComposerAddress string
+	NoOfBytes       uint64
 }
 
 type Scenario struct {
@@ -45,7 +44,7 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flags.Uint64VarP(&s.options.Throughput, "throughput", "t", 0, "Number of transfer transactions to send per slot")
 	flags.Uint64Var(&s.options.MaxWallets, "max-wallets", 0, "Maximum number of child wallets to use")
 	flags.StringVar(&s.options.ComposerAddress, "composer-address", "localhost:50051", "Address of the composer service")
-	flag.StringVar(&s.options.SequencerAddressToSendTo, "sequencer-address", "astria1gv8682e7m9dwwrm7y8u9gzpdv27ypja8ktf0tg", "Address of the sequencer to send the transfer to")
+	flags.Uint64Var(&s.options.NoOfBytes, "no-of-bytes", 0, "Number of bytes to send in the sequence action")
 
 	return nil
 }
@@ -146,7 +145,7 @@ func (s *Scenario) Run() error {
 
 func (s *Scenario) sendTx() error {
 
-	err := SendSequencerTransferViaComposer(s.composerConn, s.options.SequencerAddressToSendTo)
+	err := SendSequencerTransferViaComposer(s.composerConn, s.options.NoOfBytes)
 	if err != nil {
 		return err
 	}
@@ -154,16 +153,19 @@ func (s *Scenario) sendTx() error {
 	return nil
 }
 
-func SendSequencerTransferViaComposer(conn *grpc.ClientConn, sequencerAddressToSendTo string) error {
+func SendSequencerTransferViaComposer(conn *grpc.ClientConn, noOfBytes uint64) error {
 	grpcCollectorServiceClient := grpc_receiver.NewSequencerGrpcCollectorServiceClient(conn)
 
-	_, err := grpcCollectorServiceClient.SubmitSequencerTransaction(context.Background(), &grpc_receiver.SubmitSequencerTransactionRequest{Action: &grpc_receiver.Action{Value: &grpc_receiver.Action_TransferAction{TransferAction: &grpc_receiver.TransferAction{
-		To: &grpc_receiver.Address{Bech32M: sequencerAddressToSendTo},
-		Amount: &grpc_receiver.Uint128{
-			Lo: 1,
-			Hi: 0,
-		},
-		Asset:    "nria",
+	// create a random array of bytes of size noOfBytes
+	data := make([]byte, noOfBytes)
+	// fill it with random data
+	for i := range data {
+		data[i] = byte(i)
+	}
+
+	_, err := grpcCollectorServiceClient.SubmitSequencerTransaction(context.Background(), &grpc_receiver.SubmitSequencerTransactionRequest{Action: &grpc_receiver.Action{Value: &grpc_receiver.Action_SequenceAction{SequenceAction: &grpc_receiver.SequenceAction{
+		RollupId: &grpc_receiver.RollupId{Inner: []byte("astria")},
+		Data:     make([]byte, 0),
 		FeeAsset: "nria",
 	}}}})
 	if err != nil {
