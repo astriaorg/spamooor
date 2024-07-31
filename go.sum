@@ -1,10 +1,10 @@
-buf.build/gen/go/astria/astria/protocolbuffers/go v1.34.2-20240417015050-1257bfd50bd3.2 h1:6/f2T7VUXfMduDQHOgxnwOWoZ+Nwhg2Zm8gQPHtGGRM=
-buf.build/gen/go/astria/astria/protocolbuffers/go v1.34.2-20240417015050-1257bfd50bd3.2/go.mod h1:kNf4hwSmd48aHK07sdcN0hIGrmVYU50RC/9T2H+xEuw=
 buf.build/gen/go/astria/composer-apis/grpc/go v1.4.0-20240528191859-5569d2ee7204.1 h1:7g8zHzvS61TK+xH3wHVDN+9AoAQIJOwul2Mv83i6eQ8=
 buf.build/gen/go/astria/composer-apis/grpc/go v1.4.0-20240528191859-5569d2ee7204.1/go.mod h1:BC9gY2q0GQhCY3tB/x8yNcNvCFmexFirVBdk9h6pxA8=
 buf.build/gen/go/astria/composer-apis/protocolbuffers/go v1.34.1-20240528191859-5569d2ee7204.1/go.mod h1:uOq/7XZCsgthEafUf1rQ1sy3eS1u3zrDSreEoVVT7Kg=
 buf.build/gen/go/astria/composer-apis/protocolbuffers/go v1.34.2-20240528191859-5569d2ee7204.2 h1:TMjpeiFp4QEMnk3mbrW9GG9kU2f/qHq65ojeGOg4Txw=
 buf.build/gen/go/astria/composer-apis/protocolbuffers/go v1.34.2-20240528191859-5569d2ee7204.2/go.mod h1:BOu/+pFeOOJxltC7WWQi+VRTks0NZv++M5A07VrO9NU=
+buf.build/gen/go/astria/protocol-apis/grpc/go v1.4.0-20240627184145-2eaea785eb7d.2 h1:WgXYIsWSlCjlvmWo/XwpfBZTXdh9gcVB4qw2IboK3Nk=
+buf.build/gen/go/astria/protocol-apis/grpc/go v1.4.0-20240627184145-2eaea785eb7d.2/go.mod h1:KcfuQKUnUo/hSz41OXNOEHalokRpfWZ5P0BSkvxFR0k=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.38.0/go.mod h1:990N+gfupTy94rShfmMCWGDn0LpTmnzTp2qbd1dvSRU=
@@ -2257,8 +2257,6 @@ google.golang.org/genproto/googleapis/api v0.0.0-20231012201019-e917dd12ba7a/go.
 google.golang.org/genproto/googleapis/api v0.0.0-20231016165738-49dd2c1f3d0b/go.mod h1:IBQ646DjkDkvUIsVq/cc03FUFQ9wbZu7yE396YcL870=
 google.golang.org/genproto/googleapis/api v0.0.0-20231030173426-d783a09b4405/go.mod h1:oT32Z4o8Zv2xPQTg0pbVaPr0MPOH6f14RgXt7zfIpwg=
 google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17/go.mod h1:0xJLfVdJqpAPl8tDg1ujOCGzx6LFLttXT5NhllGOXY4=
-google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237 h1:RFiFrvy37/mpSpdySBDrUdipW/dHwsRwh3J3+A9VgT4=
-google.golang.org/genproto/googleapis/api v0.0.0-20240318140521-94a12d6c2237/go.mod h1:Z5Iiy3jtmioajWHDGFk7CeugTyHtPvMHA4UTmUkyalE=
 google.golang.org/genproto/googleapis/bytestream v0.0.0-20230530153820-e85fd2cbaebc/go.mod h1:ylj+BE99M198VPbBh6A8d9n3w8fChvyLK3wwBOjXBFA=
 google.golang.org/genproto/googleapis/bytestream v0.0.0-20230807174057-1744710a1577/go.mod h1:NjCQG/D8JandXxM57PZbAJL1DCNL6EypA0vPPwfsc7c=
 google.golang.org/genproto/googleapis/bytestream v0.0.0-20231030173426-d783a09b4405/go.mod h1:GRUCuLdzVqZte8+Dl/D4N25yLzcGqqWaYkeVOwulFqw=

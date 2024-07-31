@@ -107,6 +107,7 @@ func main() {
 		WalletCount:   100,
 		WalletPrefund: utils.EtherToWei(uint256.NewInt(3)),
 		WalletMinfund: utils.EtherToWei(uint256.NewInt(3)),
+		Scenario:      scenarioName,
 	}
 	err := scenario.Init(testerConfig)
 	if err != nil {

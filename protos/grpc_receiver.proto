@@ -1,0 +1,293 @@
+syntax = 'proto3';
+
+package astria.composer.v1alpha1;
+
+option go_package = "spamooor/protos/grpc_receiver";
+
+// A 128 bit unsigned integer encoded in protobuf.,
+//
+// Protobuf does not support integers larger than 64 bits,
+// so this message encodes a u128 by splitting it into its
+// upper 64 and lower 64 bits, each encoded as a uint64.
+//
+// A native u128 x can then be constructed by casting both
+// integers to u128, left shifting hi by 64 positions and
+// adding lo:
+//
+// x = (hi as u128) << 64 + (lo as u128)
+message Uint128 {
+  uint64 lo = 1;
+  uint64 hi = 2;
+}
+
+// A proof for a tree of the given size containing the audit path from a leaf to the root.
+message Proof {
+  // A sequence of 32 byte hashes used to reconstruct a Merkle Tree Hash.
+  bytes audit_path = 1;
+  // The index of the leaf this proof applies to.
+  uint64 leaf_index = 2;
+  // The total size of the tree this proof was derived from.
+  uint64 tree_size = 3;
+}
+
+/// Represents a denomination of some asset used within the sequencer.
+/// The `id` is used to identify the asset and for balance accounting.
+message Denom {
+  bytes id = 1;
+  string base_denom = 2;
+}
+
+// A `RollupId` is a unique identifier for a rollup chain.
+// It must be 32 bytes long. It can be derived from a string
+// using a sha256 hash.
+message RollupId {
+  bytes inner = 1;
+}
+
+// An Astria `Address`.
+//
+// Astria addresses are bech32m encoded strings, with the data part being the
+// first 20 entries of a sha256-hashed ed25519 public key.
+message Address {
+  // A bech32m encoded string. The data are the first 20 bytes of a sha256-hashed ed25519
+  // public key. Implementors must not accept both the `bytes` and `bech32m` being set.
+  string bech32m = 2;
+
+  // deprecated `bytes inner = 1;`
+  reserved 1;
+  reserved "inner";
+}
+
+
+message Action {
+  oneof value {
+    // Core protocol actions are defined on 1-10
+    TransferAction transfer_action = 1;
+    SequenceAction sequence_action = 2;
+
+    // Bridge actions are defined on 11-20
+    InitBridgeAccountAction init_bridge_account_action = 11;
+    BridgeLockAction bridge_lock_action = 12;
+    BridgeUnlockAction bridge_unlock_action = 13;
+    BridgeSudoChangeAction bridge_sudo_change_action = 14;
+
+    // IBC user actions are defined on 21-30
+    Ics20Withdrawal ics20_withdrawal = 21;
+
+    // POA sudo actions are defined on 50-60
+    SudoAddressChangeAction sudo_address_change_action = 50;
+    IbcRelayerChangeAction ibc_relayer_change_action = 51;
+    FeeAssetChangeAction fee_asset_change_action = 52;
+    FeeChangeAction fee_change_action = 53;
+  }
+  reserved 3 to 10;
+  reserved 15 to 20;
+  reserved 23 to 30;
+  reserved 56 to 60;
+
+  // deprecated fields
+  reserved 54; // deprecated "mint_action"
+  reserved "mint_action";
+}
+
+// `TransferAction` represents a value transfer transaction.
+//
+// Note: all values must be set (ie. not `None`), otherwise it will
+// be considered invalid by the sequencer.
+message TransferAction {
+  Address to = 1;
+  Uint128 amount = 2;
+  // the asset to be transferred
+  string asset = 3;
+  // the asset used to pay the transaction fee
+  string fee_asset = 4;
+}
+
+// `SequenceAction` represents a transaction destined for another
+// chain, ordered by the sequencer.
+//
+// It contains the rollup ID of the destination chain, and the
+// opaque transaction data.
+message SequenceAction {
+  RollupId rollup_id = 1;
+  bytes data = 2;
+  // the asset used to pay the transaction fee
+  string fee_asset = 3;
+}
+
+/// `SudoAddressChangeAction` represents a transaction that changes
+/// the sudo address of the chain, which is the address authorized to
+/// make validator update actions.
+///
+/// It contains the new sudo address.
+message SudoAddressChangeAction {
+  Address new_address = 1;
+}
+
+message Ics20Withdrawal {
+  // first two fields are a transparent value consisting of an amount and a denom.
+  Uint128 amount = 1;
+  string denom = 2;
+  // the address on the destination chain to send the transfer to.
+  // this is not validated by Astria; it is up to the destination chain
+  // to interpret it.
+  string destination_chain_address = 3;
+  // an Astria address to use to return funds from this withdrawal
+  // in the case it fails.
+  Address return_address = 4;
+  // the height (on Astria) at which this transfer expires.
+  IbcHeight timeout_height = 5;
+  // the unix timestamp (in nanoseconds) at which this transfer expires.
+  uint64 timeout_time = 6;
+  // the source channel used for the withdrawal.
+  string source_channel = 7;
+  // the asset used to pay the transaction fee
+  string fee_asset = 8;
+  // a memo to include with the transfer
+  string memo = 9;
+  // the address of the bridge account to transfer from, if this is a withdrawal
+  // from a bridge account and the sender of the tx is the bridge's withdrawer,
+  // which differs from the bridge account's address.
+  //
+  // if unset, and the transaction sender is not a bridge account, the withdrawal
+  // is treated as a user (non-bridge) withdrawal.
+  //
+  // if unset, and the transaction sender is a bridge account, the withdrawal is
+  // treated as a bridge withdrawal (ie. the bridge account's withdrawer address is checked).
+  Address bridge_address = 10;
+}
+
+message IbcHeight {
+  uint64 revision_number = 1;
+  uint64 revision_height = 2;
+}
+
+// `IbcRelayerChangeAction` represents a transaction that adds
+// or removes an IBC relayer address.
+// The bytes contained in each variant are the address to add or remove.
+message IbcRelayerChangeAction {
+  oneof value {
+    Address addition = 1;
+    Address removal = 2;
+  }
+}
+
+// `FeeAssetChangeAction` represents a transaction that adds
+// or removes an asset for fee payments.
+message FeeAssetChangeAction {
+  oneof value {
+    string addition = 1;
+    string removal = 2;
+  }
+}
+
+// `InitBridgeAccountAction` represents a transaction that initializes
+// a bridge account for the given rollup on the chain.
+//
+// The sender of the transaction is used as the owner of the bridge account
+// and is the only actor authorized to transfer out of this account via
+// a `TransferAction`.
+message InitBridgeAccountAction {
+  // the rollup ID to register with the bridge account (the tx sender)
+  RollupId rollup_id = 1;
+  // the asset ID accepted as an incoming transfer by the bridge account
+  string asset = 2;
+  // the asset used to pay the transaction fee
+  string fee_asset = 3;
+  // the address corresponding to the key which has sudo capabilities;
+  // ie. can change the sudo and withdrawer addresses for this bridge account.
+  // if this is empty, the sender of the transaction is used.
+  Address sudo_address = 4;
+  // the address corresponding to the key which can withdraw funds from this bridge account.
+  // if this is empty, the sender of the transaction is used.
+  Address withdrawer_address = 5;
+}
+
+// `BridgeLockAction` represents a transaction that transfers
+// funds from a sequencer account to a bridge account.
+//
+// It's the same as a `TransferAction` but with the added
+// `destination_chain_address` field.
+message BridgeLockAction {
+  // the address of the bridge account to transfer to
+  Address to = 1;
+  // the amount to transfer
+  Uint128 amount = 2;
+  // the asset to be transferred
+  string asset = 3;
+  // the asset used to pay the transaction fee
+  string fee_asset = 4;
+  // the address on the destination chain which
+  // will receive the bridged funds
+  string destination_chain_address = 5;
+}
+
+// `BridgeUnlockAction` represents a transaction that transfers
+// funds from a bridge account to a sequencer account.
+//
+// It's the same as a `TransferAction` but without the `asset` field
+// and with the `memo` field.
+message BridgeUnlockAction {
+  // the to withdraw funds to
+  Address to = 1;
+  // the amount to transfer
+  Uint128 amount = 2;
+  // the asset used to pay the transaction fee
+  string fee_asset = 3;
+  // memo for double spend prevention
+  bytes memo = 4;
+  // the address of the bridge account to transfer from,
+  // if the bridge account's withdrawer address is not the same as the bridge address.
+  // if unset, the signer of the transaction is used.
+  Address bridge_address = 5;
+}
+
+message BridgeSudoChangeAction {
+  // the address of the bridge account to change the sudo or withdrawer addresses for
+  Address bridge_address = 1;
+  // the new sudo address; unchanged if unset
+  Address new_sudo_address = 2;
+  // the new withdrawer address; unchanged if unset
+  Address new_withdrawer_address = 3;
+  // the asset used to pay the transaction fee
+  string fee_asset = 4;
+}
+
+message FeeChangeAction {
+  // note that the proto number ranges are doubled from that of `Action`.
+  // this to accomodate both `base_fee` and `byte_cost_multiplier` for each action.
+  oneof value {
+    // core protocol fees are defined on 1-20
+    Uint128 transfer_base_fee = 1;
+    Uint128 sequence_base_fee = 2;
+    Uint128 sequence_byte_cost_multiplier = 3;
+
+    // bridge fees are defined on 20-39
+    Uint128 init_bridge_account_base_fee = 20;
+    Uint128 bridge_lock_byte_cost_multiplier = 21;
+    Uint128 bridge_sudo_change_base_fee = 22;
+
+    // ibc fees are defined on 40-59
+    Uint128 ics20_withdrawal_base_fee = 40;
+  }
+}
+
+
+
+
+// SubmitRollupTransactionRequest contains a rollup transaction to be submitted to the Shared Sequencer Network
+// via the Composer
+message SubmitSequencerTransactionRequest {
+  Action action = 1;
+}
+
+// SubmitRollupTransactionResponse is a message that represents a response to a request to submit a rollup.
+// It's currently an empty response which can be evolved in the future to include more information
+message SubmitSequencerTransactionResponse {}
+
+// GrpcCollectorService is a service that defines the gRPC collector of the Composer
+service SequencerGrpcCollectorService {
+  // SubmitRollupTransaction submits a rollup transactions to the Composer.
+  // The transaction sent is bundled up with other transactions and submitted to the Shared Sequencer Network.
+  rpc SubmitSequencerTransaction(SubmitSequencerTransactionRequest) returns (SubmitSequencerTransactionResponse) {}
+}
