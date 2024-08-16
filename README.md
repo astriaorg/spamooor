@@ -5,7 +5,7 @@ spamooor is a simple tool that can be used to generate various types of random t
 
 This is a fork of https://github.com/ethpandaops/spamoor . It is a modification of the original spamoor tool to work with Astria load testing pipelines to test Astria EVM.
 
-spamooor provides two commands:
+spamooor provides a command:
 * `spamooor`: Tool for spamming txs on the network
 
 ## Build
