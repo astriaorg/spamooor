@@ -4,7 +4,6 @@ import (
 	rand2 "crypto/rand"
 	"flag"
 	"fmt"
-	univ2tx "github.com/astriaorg/spamooor/scenarios/univ2tx/contracts"
 	univ3swaptx "github.com/astriaorg/spamooor/scenarios/univ3swaptx/contracts"
 	"github.com/astriaorg/spamooor/scenariotypes"
 	"github.com/astriaorg/spamooor/tester"
@@ -73,14 +72,14 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flags.Uint64Var(&s.options.Timeout, "timeout", 120, "Number of seconds to wait timing out the test")
 	flags.Uint64Var(&s.options.BaseFee, "basefee", 20, "Max fee per gas to use in large transactions (in gwei)")
 	flags.Uint64Var(&s.options.TipFee, "tipfee", 2, "Max tip per gas to use in large transactions (in gwei)")
-	flag.Uint64Var(&s.options.AmountToSwap, "amount-to-swap", 1, "Amount of tokens to swap in each transaction(in gwei)")
+	flag.Uint64Var(&s.options.AmountToSwap, "amount-to-swap", 100000, "Amount of tokens to swap in each transaction(in gwei)")
 	flag.BoolVar(&s.options.RandomAmountToSwap, "random-amount-to-swap", false, "Randomize the amount of tokens to swap in each transaction(in gwei)")
 	flags.StringVar(&s.options.ComposerAddress, "composer-address", "localhost:50051", "Address of the composer service")
 	flags.BoolVar(&s.options.SendViaComposer, "send-via-composer", false, "Send transactions via composer")
 	flags.StringVar(&s.options.WethContractAddress, "weth-contract", "", "The address of the WETH contract")
 	flags.StringVar(&s.options.SwapRouterContractAddress, "swap-router-contract", "", "The address of the Uniswap V2 Router contract")
 	flags.StringVar(&s.options.CustomizableErc20ContractAddress, "customizable-erc20-contract", "", "The address of the customizable ERC20 contract")
-	flags.Uint64Var(&s.options.TokenMintAmount, "token-mint-amount", 1000000000000000000, "Amount of tokens to mint for each wallet(in gwei)")
+	flags.Uint64Var(&s.options.TokenMintAmount, "token-mint-amount", 100000, "Amount of tokens to mint for each wallet(in gwei)")
 	flags.StringVar(&s.options.RollupId, "", "", "The rollup id of the evm rollup")
 
 	return nil
@@ -139,6 +138,7 @@ func (s *Scenario) Setup(testerCfg *tester.Tester) error {
 		s.logger.Errorf("could not mint Erc20 and WETH for child wallets: %v", err)
 		return err
 	}
+
 	if len(errorMap) > 0 {
 		// print errors
 		for addr, errs := range errorMap {
@@ -264,7 +264,7 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 
 	// get amount to swap
 	amount := uint256.NewInt(s.options.AmountToSwap)
-	amount = amount.Mul(amount, uint256.NewInt(1000000))
+	amount = amount.Mul(amount, uint256.NewInt(1))
 	if s.options.RandomAmountToSwap {
 		n, err := rand2.Int(rand2.Reader, amount.ToBig())
 		if err == nil {
@@ -272,15 +272,79 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		}
 	}
 
+	wethAllowance, err := s.GetWethAllowance(wallet, s.swapRouterContract)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	erc20Allowance, err := s.GetCustomizableErc20Allowance(wallet, s.swapRouterContract)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	walletTransactor, err := wallet.GetTransactor(true, big.NewInt(0))
 	if err != nil {
 		return nil, nil, err
 	}
 
+	// represent 2^256 - 1 in big int
+	maxApproval := big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), big.NewInt(0))
+	maxApproval = maxApproval.Sub(maxApproval, big.NewInt(1))
+	if wethAllowance.Cmp(maxApproval) != 0 {
+		s.logger.Infof("approving max WETH for swap router")
+
+		wethContract, err := s.GetWethContract()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		approveWethTx, err := wethContract.Approve(walletTransactor, s.swapRouterContract, maxApproval)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
+			Gas:     0,
+			Wallet:  wallet,
+			Tx:      approveWethTx,
+			Client:  client,
+			BaseFee: int64(s.options.BaseFee),
+			TipFee:  int64(s.options.TipFee),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	if erc20Allowance.Cmp(maxApproval) != 0 {
+		s.logger.Infof("approving max ERC20 for swap router")
+
+		erc20Contract, err := s.GetCustomizableErc20Contract()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		approveErc20Tx, err := erc20Contract.Approve(walletTransactor, s.swapRouterContract, maxApproval)
+		if err != nil {
+			return nil, nil, err
+		}
+		_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
+			Gas:     0,
+			Wallet:  wallet,
+			Tx:      approveErc20Tx,
+			Client:  client,
+			BaseFee: int64(s.options.BaseFee),
+			TipFee:  int64(s.options.TipFee),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	swapTx, err := routerContract.ExactInputSingle(walletTransactor, univ3swaptx.IV3SwapRouterExactInputSingleParams{
 		TokenIn:           swapDirection[0],
 		TokenOut:          swapDirection[1],
-		Fee:               big.NewInt(0),
+		Fee:               big.NewInt(500),
 		Recipient:         walletTransactor.From,
 		AmountIn:          amount.ToBig(),
 		AmountOutMinimum:  big.NewInt(1),
@@ -359,7 +423,7 @@ func (s *Scenario) MintErc20AndWethForChildWallets() (map[common.Address][]error
 			wg1 := sync.WaitGroup{}
 
 			for {
-				if batchIndex > uint64(s.tester.GetTotalChildWallets()) || batchIndex >= finalBatchIndex {
+				if batchIndex > uint64(s.tester.GetTotalChildWallets()) || batchIndex > finalBatchIndex {
 					break
 				}
 
@@ -368,15 +432,6 @@ func (s *Scenario) MintErc20AndWethForChildWallets() (map[common.Address][]error
 				wg1.Add(1)
 				go func(errorMap *map[common.Address][]error, errorMapLock *sync.Mutex) {
 					defer wg1.Done()
-					// get child wallet transactor
-					childWalletTransactor, err := childWallet.GetTransactor(true, big.NewInt(0))
-					if err != nil {
-						s.logger.Errorf("could not get transactor for child wallet: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
 
 					customizableErc20Contract, err := s.GetCustomizableErc20Contract()
 					if err != nil {
@@ -415,26 +470,6 @@ func (s *Scenario) MintErc20AndWethForChildWallets() (map[common.Address][]error
 						return
 					}
 
-					childWalletTransactor.Value = big.NewInt(0)
-					// dai approval
-					approveTx, err := customizableErc20Contract.Approve(childWalletTransactor, s.swapRouterContract, tokenMintAmount)
-					if err != nil {
-						s.logger.Errorf("could not approve DAI for child wallet: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
-
-					wethApproveTx, err := wethContract.Approve(childWalletTransactor, s.swapRouterContract, tokenMintAmount)
-					if err != nil {
-						s.logger.Errorf("could not approve WETH for child wallet: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
-
 					internalWg := sync.WaitGroup{}
 
 					internalWg.Add(1)
@@ -456,6 +491,7 @@ func (s *Scenario) MintErc20AndWethForChildWallets() (map[common.Address][]error
 							errorMapLock.Unlock()
 							return
 						}
+
 						_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
 							Gas:     0,
 							Wallet:  rootWallet,
@@ -472,58 +508,7 @@ func (s *Scenario) MintErc20AndWethForChildWallets() (map[common.Address][]error
 							return
 						}
 
-						_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
-							Gas:     0,
-							Wallet:  rootWallet,
-							Tx:      wethApproveTx,
-							Client:  client,
-							BaseFee: int64(s.options.BaseFee),
-							TipFee:  int64(s.options.TipFee),
-						})
-						if err != nil {
-							s.logger.Errorf("could not approve WETH for child wallet: %v", err)
-							errorMapLock.Lock()
-							(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-							errorMapLock.Unlock()
-							return
-						}
-
-						_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
-							Gas:     0,
-							Wallet:  rootWallet,
-							Tx:      approveTx,
-							Client:  client,
-							BaseFee: int64(s.options.BaseFee),
-							TipFee:  int64(s.options.TipFee),
-						})
-						if err != nil {
-							s.logger.Errorf("could not approve ERC20 for child wallet: %v", err)
-							errorMapLock.Lock()
-							(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-							errorMapLock.Unlock()
-							return
-						}
 					}(errorMap, errorMapLock)
-
-					//internalWg.Add(1)
-					//go func(errorMap *map[common.Address][]error, errorMapLock *sync.Mutex) {
-					//	defer internalWg.Done()
-					//	_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
-					//		Gas:     0,
-					//		Wallet:  childWallet,
-					//		Tx:      approveTx,
-					//		Client:  client,
-					//		BaseFee: int64(s.options.BaseFee),
-					//		TipFee:  int64(s.options.TipFee),
-					//	})
-					//	if err != nil {
-					//		s.logger.Errorf("could not approve DAI for child wallet: %v", err)
-					//		errorMapLock.Lock()
-					//		(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-					//		errorMapLock.Unlock()
-					//		return
-					//	}
-					//}(errorMap, errorMapLock)
 
 					internalWg.Wait()
 				}(errorMap, errorMapLock)
@@ -631,7 +616,7 @@ func (s *Scenario) GetCustomizableErc20Balance(wallet *txbuilder.Wallet) (*big.I
 func (s *Scenario) GetWethAllowance(wallet *txbuilder.Wallet, to common.Address) (*big.Int, error) {
 	client := s.tester.GetClient(tester.SelectByIndex, 0)
 
-	wethContract, err := univ2tx.NewWeth(s.wethContract, client.GetEthClient())
+	wethContract, err := univ3swaptx.NewWeth(s.wethContract, client.GetEthClient())
 	if err != nil {
 		return nil, err
 	}
