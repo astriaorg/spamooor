@@ -369,6 +369,68 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		return nil, nil, err
 	}
 
+	maxApproval := big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), nil)
+	maxApproval = maxApproval.Sub(maxApproval, big.NewInt(1))
+
+	// approve max allowance
+	daiAllowance, err := s.GetDaiAllowance(wallet, s.uniswapRouterContract)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// increase the dai allowance to max
+	if daiAllowance.Cmp(maxApproval) != 0 {
+		daiContract, err := s.GetDaiContract()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		daiApproveTx, err := daiContract.Approve(walletTransactor, s.uniswapRouterContract, maxApproval)
+		if err != nil {
+			return nil, nil, err
+		}
+		_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
+			Gas:     0,
+			Wallet:  wallet,
+			Tx:      daiApproveTx,
+			Client:  client,
+			BaseFee: int64(s.options.BaseFee),
+			TipFee:  int64(s.options.TipFee),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	wethAllowance, err := s.GetWethAllowance(wallet, s.uniswapRouterContract)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// increase the weth allowance to max
+	if wethAllowance.Cmp(maxApproval) != 0 {
+		wethContract, err := s.GetWethContract()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		wethApproveTx, err := wethContract.Approve(walletTransactor, s.uniswapRouterContract, maxApproval)
+		if err != nil {
+			return nil, nil, err
+		}
+		_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
+			Gas:     0,
+			Wallet:  wallet,
+			Tx:      wethApproveTx,
+			Client:  client,
+			BaseFee: int64(s.options.BaseFee),
+			TipFee:  int64(s.options.TipFee),
+		})
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
 	var swapTx *types.Transaction
 
 	// get time 10mins from now
@@ -440,6 +502,7 @@ func (s *Scenario) MintDaiAndWethForRootWallet() error {
 		s.logger.Errorf("could not create Dai contract: %v", err)
 		return err
 	}
+
 	wethContract, err := s.GetWethContract()
 	if err != nil {
 		s.logger.Errorf("could not create Weth contract: %v", err)
@@ -461,15 +524,18 @@ func (s *Scenario) MintDaiAndWethForRootWallet() error {
 		return err
 	}
 
+	maxApproval := big.NewInt(0).Exp(big.NewInt(2), big.NewInt(256), nil)
+	maxApproval = maxApproval.Sub(maxApproval, big.NewInt(1))
+
 	rootWalletTransactor.Value = big.NewInt(0)
 	// dai approval
-	daiApproveTx, err := daiContract.Approve(rootWalletTransactor, s.uniswapRouterContract, daiAmountToMint)
+	daiApproveTx, err := daiContract.Approve(rootWalletTransactor, s.uniswapRouterContract, maxApproval)
 	if err != nil {
 		s.logger.Errorf("could not approve DAI for root wallet: %v", err)
 		return err
 	}
 	// weth approval
-	wethApproveTx, err := wethContract.Approve(rootWalletTransactor, s.uniswapRouterContract, wethAmountToMint)
+	wethApproveTx, err := wethContract.Approve(rootWalletTransactor, s.uniswapRouterContract, maxApproval)
 	if err != nil {
 		s.logger.Errorf("could not approve WETH for root wallet: %v", err)
 		return err
@@ -576,15 +642,6 @@ func (s *Scenario) MintDaiAndWethForChildWallets() (map[common.Address][]error, 
 				wg1.Add(1)
 				go func(errorMap *map[common.Address][]error, errorMapLock *sync.Mutex) {
 					defer wg1.Done()
-					// get child wallet transactor
-					childWalletTransactor, err := childWallet.GetTransactor(true, big.NewInt(0))
-					if err != nil {
-						s.logger.Errorf("could not get transactor for child wallet: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
 
 					daiContract, err := s.GetDaiContract()
 					if err != nil {
@@ -605,67 +662,28 @@ func (s *Scenario) MintDaiAndWethForChildWallets() (map[common.Address][]error, 
 						return
 					}
 
-					childWalletTransactor.Value = big.NewInt(0)
-					// dai approval
-					daiApproveTx, err := daiContract.Approve(childWalletTransactor, s.uniswapRouterContract, tokenMintAmount)
+					// send and await txs
+					_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
+						Gas:     0,
+						Wallet:  rootWallet,
+						Tx:      daiMintTx,
+						Client:  client,
+						BaseFee: int64(s.options.BaseFee),
+						TipFee:  int64(s.options.TipFee),
+					})
 					if err != nil {
-						s.logger.Errorf("could not approve DAI for child wallet: %v", err)
+						s.logger.Errorf("could not mint DAI for child wallet: %v", err)
 						errorMapLock.Lock()
 						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
 						errorMapLock.Unlock()
 						return
 					}
 
-					internalWg := sync.WaitGroup{}
-
-					internalWg.Add(1)
-					// send and await txs
-					go func(errorMap *map[common.Address][]error, errorMapLock *sync.Mutex) {
-						defer internalWg.Done()
-						_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
-							Gas:     0,
-							Wallet:  rootWallet,
-							Tx:      daiMintTx,
-							Client:  client,
-							BaseFee: int64(s.options.BaseFee),
-							TipFee:  int64(s.options.TipFee),
-						})
-						if err != nil {
-							s.logger.Errorf("could not mint DAI for child wallet: %v", err)
-							errorMapLock.Lock()
-							(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-							errorMapLock.Unlock()
-							return
-						}
-					}(errorMap, errorMapLock)
-
-					internalWg.Add(1)
-					go func(errorMap *map[common.Address][]error, errorMapLock *sync.Mutex) {
-						defer internalWg.Done()
-						_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
-							Gas:     0,
-							Wallet:  childWallet,
-							Tx:      daiApproveTx,
-							Client:  client,
-							BaseFee: int64(s.options.BaseFee),
-							TipFee:  int64(s.options.TipFee),
-						})
-						if err != nil {
-							s.logger.Errorf("could not approve DAI for child wallet: %v", err)
-							errorMapLock.Lock()
-							(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-							errorMapLock.Unlock()
-							return
-						}
-					}(errorMap, errorMapLock)
-
-					internalWg.Wait()
 				}(errorMap, errorMapLock)
-
-				wg1.Wait()
 
 				batchIndex += 1
 			}
+			wg1.Wait()
 
 		}(batchIndex, batchSize, &errorMap, &errorMapLock)
 
