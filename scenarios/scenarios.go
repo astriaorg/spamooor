@@ -9,6 +9,7 @@ import (
 	"github.com/astriaorg/spamooor/scenarios/sequencersequenceactiontx"
 	"github.com/astriaorg/spamooor/scenarios/sequencertransfertx"
 	"github.com/astriaorg/spamooor/scenarios/univ2tx"
+	"github.com/astriaorg/spamooor/scenarios/univ3swaptx"
 	"github.com/astriaorg/spamooor/scenariotypes"
 )
 
@@ -21,4 +22,5 @@ var Scenarios = map[string]func() scenariotypes.Scenario{
 	"deploytx":                  deploytx.NewScenario,
 	"sequencertransfertx":       sequencertransfertx.NewScenario,
 	"sequencersequenceactiontx": sequencersequenceactiontx.NewScenario,
+	"univ3swaptx":               univ3swaptx.NewScenario,
 }
