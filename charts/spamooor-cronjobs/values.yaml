@@ -2,7 +2,7 @@
 # Declare variables to be passed into your templates.
 # Note that these private keys will never contain any real money. They are used for testing purposes only.
 jobs:
-  erctxsjob:
+  erctxsjob: # 0x8b341c7dB6d57177C8e3753Fd45D6184Ba646B1F
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
@@ -17,14 +17,14 @@ jobs:
       - "--privkey"
       - "61276d90422fd899799cf6c34c8574461de4aadd0ef59af5993b74dd8ce2d644"
       - "--rpchost"
-      - "http://executor.astria.pr-1642.dev.astria.org/"
+      - "https://rpc.evm.dusk-11.devnet.astria.org/"
       - "erctx"
       - "--max-wallets"
-      - "10"
+      - "100"
       - "--throughput"
-      - "10"
+      - "100"
       - "--max-pending"
-      - "10"
+      - "100"
       - "--count"
       - "1000"
       - "--timeout"
@@ -40,7 +40,7 @@ jobs:
     successfulJobsHistoryLimit: 1
     concurrencyPolicy: Forbid
     restartPolicy: Never
-  eoatxsjob:
+  eoatxsjob: # 0x3176267a57d173beBA37B4b88B63ED91D054Ef61
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
@@ -55,10 +55,10 @@ jobs:
       - "--privkey"
       - "a44bc2bb3930e826a602011e0e12e783d6e48d8163042db654039cbbffdd4411"
       - "--rpchost"
-      - "http://executor.astria.pr-1642.dev.astria.org/"
+      - "https://rpc.evm.dusk-11.devnet.astria.org/"
       - "eoatx"
       - "--max-wallets"
-      - "10"
+      - "100"
       - "--throughput"
       - "1000"
       - "--max-pending"
@@ -82,7 +82,7 @@ jobs:
     successfulJobsHistoryLimit: 1
     concurrencyPolicy: Forbid
     restartPolicy: Never
-  gasburnertxsjob:
+  gasburnertxsjob: # 0x268A395e8BD9D646eDFfc9C4F1361eBce13BA09d
     securityContext:
       runAsUser: 1000
       runAsGroup: 1000
@@ -97,20 +97,20 @@ jobs:
       - "--privkey"
       - "d4d14cafa5c9ab89b8b41479e7c7f9f14999949a40cbcc13e6df9b3782251030"
       - "--rpchost"
-      - "http://executor.astria.pr-1642.dev.astria.org/"
+      - "https://rpc.evm.dusk-11.devnet.astria.org/"
       - "gasburnertx"
       - "--max-wallets"
-      - "10"
-      - "--throughput"
-      - "5"
-      - "--max-pending"
-      - "5"
-      - "--basefee"
       - "100"
-      - "--tipfee"
-      - "10"
-      - "--count"
+      - "--throughput"
       - "50"
+      - "--max-pending"
+      - "50"
+      - "--basefee"
+      - "300"
+      - "--tipfee"
+      - "50"
+      - "--count"
+      - "100"
       - "--gas-units-to-burn"
       - "5000000"
       - "--timeout"
@@ -126,7 +126,7 @@ jobs:
     successfulJobsHistoryLimit: 1
     concurrencyPolicy: Forbid
     restartPolicy: Never
-    univ2txsjob:
+    univ2txsjob: # 0x9f47d6749a1C06642bAcA60164d13106cB2FF479
       securityContext:
         runAsUser: 1000
         runAsGroup: 1000
@@ -141,14 +141,14 @@ jobs:
         - "--privkey"
         - "445f758b7577b5db2428740b28dd06128ea2128191bd837bef087e70cc72d25d"
         - "--rpchost"
-        - "http://executor.astria.pr-1642.dev.astria.org/"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+        - "https://rpc.evm.dusk-11.devnet.astria.org/"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
         - "univ2tx"
         - "--max-wallets"
-        - "10"
+        - "100"
         - "--throughput"
-        - "10"
+        - "500"
         - "--max-pending"
-        - "10"
+        - "100"
         - "--count"
         - "1000"
         - "--timeout"
