@@ -13,8 +13,8 @@ spamooor provides a command:
 Or build it yourself:
 
 ```
-git clone https://github.com/astriaorg/goomy-blob
-cd goomy-blob
+git clone https://github.com/astriaorg/spamooor
+cd spamooor
 go build ./cmd/spamooor
 ```
 
