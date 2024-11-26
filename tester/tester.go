@@ -60,7 +60,7 @@ func (tester *Tester) Start(seed string) error {
 
 	tester.logger.WithFields(logrus.Fields{
 		"version": utils.GetBuildVersion(),
-	}).Infof("starting blob testing tool")
+	}).Infof("starting spamooor tool")
 
 	fmt.Printf("Tester scenario is %s\n", tester.config.Scenario)
 	if tester.config.Scenario != "sequencertransfertx" && tester.config.Scenario != "sequencersequenceactiontx" {
