@@ -83,11 +83,15 @@ func (tester *Tester) Start(seed string) error {
 		}
 
 		// prepare wallets with Eth
-		err = tester.PrepareWallets(seed)
-		if err != nil {
-			return err
+		if tester.config.Scenario != "univ3swaptx" {
+			err = tester.PrepareWallets(seed)
+			if err != nil {
+				return err
+			}
+			go tester.watchWalletBalancesLoop()
+		} else {
+			tester.logger.Infof("univ3tx scenario does not require child wallet funding")
 		}
-		go tester.watchWalletBalancesLoop()
 	}
 
 	return nil

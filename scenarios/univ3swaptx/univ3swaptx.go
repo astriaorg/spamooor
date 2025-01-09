@@ -131,27 +131,12 @@ func (s *Scenario) Setup(testerCfg *tester.Tester) error {
 
 	s.logger.Infof("starting scenario: univ3tx")
 
-	// now we need to mint DAI and WETH for all child wallets
-	s.logger.Infof("minting Erc20 and WETH for child wallets...")
-	errorMap, err := s.MintTokenAndWethForChildWallets()
-	if err != nil {
-		s.logger.Errorf("could not mint Erc20 and WETH for child wallets: %v", err)
-		return err
-	}
-
-	if len(errorMap) > 0 {
-		// print errors
-		for addr, errs := range errorMap {
-			for _, e := range errs {
-				s.logger.Errorf("error for wallet: %v: %v", addr.String(), e)
-			}
-		}
-	}
-
 	return nil
 }
 
 func (s *Scenario) Run() error {
+	s.logger.Info("running scenario: univ3tx")
+
 	txIdxCounter := uint64(0)
 	counterMutex := sync.Mutex{}
 	waitGroup := sync.WaitGroup{}
@@ -218,7 +203,8 @@ func (s *Scenario) Run() error {
 
 func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, error) {
 	client := s.tester.GetClient(tester.SelectByIndex, int(txIdx))
-	wallet := s.tester.GetWallet(tester.SelectByIndex, int(txIdx))
+	//wallet := s.tester.GetWallet(tester.SelectByIndex, int(txIdx))
+	wallet := s.tester.GetRootWallet()
 
 	var feeCap *big.Int
 	var tipCap *big.Int
@@ -383,142 +369,6 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 	go s.awaitTx(txIdx, tx, client, wallet)
 
 	return tx, client, nil
-}
-
-func (s *Scenario) MintTokenAndWethForChildWallets() (map[common.Address][]error, error) {
-	if s.options.MaxWallets == 0 {
-		return nil, fmt.Errorf("max wallets not set")
-	}
-
-	client := s.tester.GetClient(tester.SelectByIndex, 0)
-
-	rootWallet := s.tester.GetRootWallet()
-	rootWalletTransactor, err := rootWallet.GetTransactor(true, big.NewInt(0))
-	if err != nil {
-		s.logger.Errorf("could not get transactor for root wallet: %v", err)
-		return nil, err
-	}
-
-	tokenMintAmount := s.tokenMintAmount.Mul(s.tokenMintAmount, big.NewInt(1000000000))
-	batchSize := uint64(100)
-	batchIndex := uint64(0)
-
-	errorMapLock := sync.Mutex{}
-	errorMap := make(map[common.Address][]error)
-
-	wg := sync.WaitGroup{}
-	// batch up the mints and deposits in order to not overwhelm the rpc
-	for {
-		wg.Add(1)
-		go func(batchIndex uint64, batchSize uint64, errorMap *map[common.Address][]error, errorMapLock *sync.Mutex) {
-			defer wg.Done()
-			finalBatchIndex := batchIndex + batchSize
-
-			s.logger.Infof("funding child wallets: %v/%v", batchIndex, s.tester.GetTotalChildWallets())
-
-			wg1 := sync.WaitGroup{}
-
-			for {
-				if batchIndex > uint64(s.tester.GetTotalChildWallets()) || batchIndex > finalBatchIndex {
-					break
-				}
-
-				childWallet := s.tester.GetWallet(tester.SelectByIndex, int(batchIndex))
-
-				wg1.Add(1)
-				go func(errorMap *map[common.Address][]error, errorMapLock *sync.Mutex) {
-					defer wg1.Done()
-
-					tokenContract, err := s.GetTokenContract()
-					if err != nil {
-						s.logger.Errorf("could not create Dai contract: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
-
-					wethContract, err := s.GetWethContract()
-					if err != nil {
-						s.logger.Errorf("could not create WETH contract: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
-
-					// transfer erc20 for child wallet
-					transferTx, err := tokenContract.Transfer(rootWalletTransactor, childWallet.GetAddress(), tokenMintAmount)
-					if err != nil {
-						s.logger.Errorf("could not transfer token for child wallet: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
-
-					// transfer weth
-					wethTransferTx, err := wethContract.Transfer(rootWalletTransactor, childWallet.GetAddress(), tokenMintAmount)
-					if err != nil {
-						s.logger.Errorf("could not transfer WETH for child wallet: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
-
-					_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
-						Gas:     0,
-						Wallet:  rootWallet,
-						Tx:      transferTx,
-						Client:  client,
-						BaseFee: int64(s.options.BaseFee),
-						TipFee:  int64(s.options.TipFee),
-					})
-					if err != nil {
-						s.logger.Errorf("could not mint DAI for child wallet: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
-
-					_, _, err = txbuilder.SendAndAwaitTx(txbuilder.SendTxOpts{
-						Gas:     0,
-						Wallet:  rootWallet,
-						Tx:      wethTransferTx,
-						Client:  client,
-						BaseFee: int64(s.options.BaseFee),
-						TipFee:  int64(s.options.TipFee),
-					})
-					if err != nil {
-						s.logger.Errorf("could not transfer WETH for child wallet: %v", err)
-						errorMapLock.Lock()
-						(*errorMap)[childWallet.GetAddress()] = append((*errorMap)[childWallet.GetAddress()], err)
-						errorMapLock.Unlock()
-						return
-					}
-
-				}(errorMap, errorMapLock)
-				batchIndex += 1
-			}
-			wg1.Wait()
-
-		}(batchIndex, batchSize, &errorMap, &errorMapLock)
-
-		batchIndex += batchSize
-
-		// we are done if this is true
-		if batchIndex >= uint64(s.tester.GetTotalChildWallets()) {
-			break
-		}
-	}
-
-	wg.Wait()
-
-	s.logger.Infof("minted Token for child wallets")
-
-	return errorMap, nil
 }
 
 func (s *Scenario) awaitTx(txIdx uint64, tx *types.Transaction, client *txbuilder.Client, wallet *txbuilder.Wallet) {
