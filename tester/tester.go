@@ -62,37 +62,30 @@ func (tester *Tester) Start(seed string) error {
 		"version": utils.GetBuildVersion(),
 	}).Infof("starting spamooor tool")
 
-	fmt.Printf("Tester scenario is %s\n", tester.config.Scenario)
-	if tester.config.Scenario != "sequencertransfertx" && tester.config.Scenario != "sequencersequenceactiontx" {
-		// prepare clients
-		err = tester.PrepareClients()
-		if err != nil {
-			return err
-		}
-		err = tester.watchClientStatus()
-		if err != nil {
-			return err
-		}
-		// watch client status
-		go tester.watchClientStatusLoop()
-
-		tester.logger.Infof("preparing root wallet!")
-		err = tester.PrepareRootWallet()
-		if err != nil {
-			return err
-		}
-
-		// prepare wallets with Eth
-		if tester.config.Scenario != "univ3swaptx" {
-			err = tester.PrepareWallets(seed)
-			if err != nil {
-				return err
-			}
-			go tester.watchWalletBalancesLoop()
-		} else {
-			tester.logger.Infof("univ3tx scenario does not require child wallet funding")
-		}
+	// prepare clients
+	err = tester.PrepareClients()
+	if err != nil {
+		return err
 	}
+	err = tester.watchClientStatus()
+	if err != nil {
+		return err
+	}
+	// watch client status
+	go tester.watchClientStatusLoop()
+
+	tester.logger.Infof("preparing root wallet!")
+	err = tester.PrepareRootWallet()
+	if err != nil {
+		return err
+	}
+
+	// prepare wallets with Eth
+	err = tester.PrepareWallets(seed)
+	if err != nil {
+		return err
+	}
+	go tester.watchWalletBalancesLoop()
 
 	return nil
 }

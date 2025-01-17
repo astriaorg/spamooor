@@ -1,11 +1,7 @@
 package txbuilder
 
 import (
-	"buf.build/gen/go/astria/composer-apis/grpc/go/astria/composer/v1alpha1/composerv1alpha1grpc"
-	astriaComposerPb "buf.build/gen/go/astria/composer-apis/protocolbuffers/go/astria/composer/v1alpha1"
 	"context"
-	"crypto/sha256"
-	"google.golang.org/grpc"
 	"math/big"
 	"net/url"
 	"strings"
@@ -151,28 +147,6 @@ func (client *Client) GetSuggestedFee() (*big.Int, *big.Int, error) {
 func (client *Client) SendTransaction(tx *types.Transaction) error {
 	client.logger.Tracef("submitted transaction %v", tx.Hash().String())
 	return client.client.SendTransaction(client.getContext(), tx)
-}
-
-func (client *Client) SendTransactionViaComposer(tx *types.Transaction, conn *grpc.ClientConn, rollupId string) error {
-	hashedRollupId := sha256.Sum256([]byte(rollupId))
-
-	data := make([]byte, 190000)
-	// fill up data
-	for i := 0; i < 190000; i++ {
-		data[i] = byte(i)
-	}
-
-	grpcCollectorServiceClient := composerv1alpha1grpc.NewGrpcCollectorServiceClient(conn)
-	// if the request succeeds, then an empty response will be returned which can be ignored for now
-	_, err := grpcCollectorServiceClient.SubmitRollupTransaction(context.Background(), &astriaComposerPb.SubmitRollupTransactionRequest{
-		RollupId: hashedRollupId[:],
-		Data:     data,
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (client *Client) SubmitTransaction(txBytes []byte) *common.Hash {
