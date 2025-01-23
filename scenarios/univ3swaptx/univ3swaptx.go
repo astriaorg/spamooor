@@ -14,8 +14,6 @@ import (
 	"github.com/holiman/uint256"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/pflag"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"math/big"
 	"os"
 	"sync"
@@ -36,16 +34,13 @@ type ScenarioOptions struct {
 	AmountToSwap              uint64
 	RandomAmountToSwap        bool
 	TokenMintAmount           uint64
-	ComposerAddress           string
-	SendViaComposer           bool
 	RollupId                  string
 }
 
 type Scenario struct {
-	options      ScenarioOptions
-	logger       *logrus.Entry
-	tester       *tester.Tester
-	composerConn *grpc.ClientConn
+	options ScenarioOptions
+	logger  *logrus.Entry
+	tester  *tester.Tester
 
 	wethContract       common.Address
 	swapRouterContract common.Address
@@ -74,8 +69,6 @@ func (s *Scenario) Flags(flags *pflag.FlagSet) error {
 	flags.Uint64Var(&s.options.TipFee, "tipfee", 2, "Max tip per gas to use in large transactions (in gwei)")
 	flag.Uint64Var(&s.options.AmountToSwap, "amount-to-swap", 1, "Amount of tokens to swap in each transaction(in gwei)")
 	flag.BoolVar(&s.options.RandomAmountToSwap, "random-amount-to-swap", false, "Randomize the amount of tokens to swap in each transaction(in gwei)")
-	flags.StringVar(&s.options.ComposerAddress, "composer-address", "localhost:50051", "Address of the composer service")
-	flags.BoolVar(&s.options.SendViaComposer, "send-via-composer", false, "Send transactions via composer")
 	flags.StringVar(&s.options.WethContractAddress, "weth-contract", "", "The address of the WETH contract")
 	flags.StringVar(&s.options.SwapRouterContractAddress, "swap-router-contract", "", "The address of the Uniswap V2 Router contract")
 	flags.StringVar(&s.options.TokenContractAddress, "token-contract", "", "The address of the token contract")
@@ -115,13 +108,6 @@ func (s *Scenario) Init(testerCfg *tester.TesterConfig) error {
 	s.tokenContract = common.HexToAddress(s.options.TokenContractAddress)
 
 	s.tokenMintAmount = big.NewInt(int64(s.options.TokenMintAmount))
-
-	conn, err := grpc.NewClient(s.options.ComposerAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return err
-	}
-
-	s.composerConn = conn
 
 	return nil
 }
@@ -353,16 +339,9 @@ func (s *Scenario) sendTx(txIdx uint64) (*types.Transaction, *txbuilder.Client, 
 		return nil, nil, err
 	}
 
-	if s.options.SendViaComposer {
-		err = client.SendTransactionViaComposer(tx, s.composerConn, s.options.RollupId)
-		if err != nil {
-			return nil, client, err
-		}
-	} else {
-		err = client.SendTransaction(tx)
-		if err != nil {
-			return nil, client, err
-		}
+	err = client.SendTransaction(tx)
+	if err != nil {
+		return nil, client, err
 	}
 
 	s.pendingWGroup.Add(1)
