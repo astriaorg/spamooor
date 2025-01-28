@@ -105,8 +105,8 @@ func main() {
 		RpcHosts:      rpcHosts,
 		WalletPrivkey: cliArgs.privkey,
 		WalletCount:   100,
-		WalletPrefund: utils.WeiToEther(uint256.NewInt(10000000000000000)),
-		WalletMinfund: utils.WeiToEther(uint256.NewInt(10000000000000000)),
+		WalletPrefund: utils.EtherToWei(uint256.NewInt(3)),
+		WalletMinfund: utils.EtherToWei(uint256.NewInt(1)),
 		Scenario:      scenarioName,
 	}
 	err := scenario.Init(testerConfig)
