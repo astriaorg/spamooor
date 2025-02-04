@@ -49,7 +49,7 @@ jobs:
       repository: ghcr.io/astriaorg/spamooor
       tag: latest
       imagePullPolicy: Always
-    schedule: "*/2 * * * *"
+    schedule: "*/1 * * * *"
     command: ["/app/spamooor"]
     args:
       - "--privkey"
