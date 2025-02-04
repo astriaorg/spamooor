@@ -2,44 +2,44 @@
 # Declare variables to be passed into your templates.
 # Note that these private keys will never contain any real money. They are used for testing purposes only.
 jobs:
-  #  erctxsjob:
-  #    securityContext:
-  #      runAsUser: 1000
-  #      runAsGroup: 1000
-  #      fsGroup: 2000
-  #    image:
-  #      repository: ghcr.io/astriaorg/spamooor
-  #      tag: latest
-  #      imagePullPolicy: Always
-  #    schedule: "*/25 * * * *"
-  #    command: ["/app/spamooor"]
-  #    args:
-  #      - "--privkey"
-  #      - "61276d90422fd899799cf6c34c8574461de4aadd0ef59af5993b74dd8ce2d644"
-  #      - "--rpchost"
-  #      - "https://rpc.evm.dusk-7.devnet.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
-  #      - "erctx"
-  #      - "--max-wallets"
-  #      - "10"
-  #      - "--throughput"
-  #      - "10"
-  #      - "--max-pending"
-  #      - "10"
-  #      - "--count"
-  #      - "1000"
-  #      - "--timeout"
-  #      - "120"
-  #    resources:
-  #      limits:
-  #        cpu: 50m
-  #        memory: 256Mi
-  #      requests:
-  #        cpu: 50m
-  #        memory: 256Mi
-  #    failedJobsHistoryLimit: 1
-  #    successfulJobsHistoryLimit: 1
-  #    concurrencyPolicy: Forbid
-  #    restartPolicy: Never
+  erctxsjob:
+    securityContext:
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 2000
+    image:
+      repository: ghcr.io/astriaorg/spamooor
+      tag: latest
+      imagePullPolicy: Always
+    schedule: "*/3 * * * *"
+    command: ["/app/spamooor"]
+    args:
+      - "--privkey"
+      - "92fd61653f3091aaced9d3cb7cffe01e62b5cffc4de8b6e8fff081d329fc32da"
+      - "--rpchost"
+      - "https://rpc.flame.dawn-1.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
+      - "erctx"
+      - "--max-wallets"
+      - "3"
+      - "--throughput"
+      - "60"
+      - "--max-pending"
+      - "60"
+      - "--count"
+      - "600"
+      - "--timeout"
+      - "120"
+    resources:
+      limits:
+        cpu: 50m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 256Mi
+    failedJobsHistoryLimit: 1
+    successfulJobsHistoryLimit: 1
+    concurrencyPolicy: Forbid
+    restartPolicy: Never
   eoatxsjob:
     securityContext:
       runAsUser: 1000
