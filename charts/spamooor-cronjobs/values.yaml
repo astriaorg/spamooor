@@ -11,7 +11,7 @@ jobs:
       repository: ghcr.io/astriaorg/spamooor
       tag: latest
       imagePullPolicy: Always
-    schedule: "*/3 * * * *"
+    schedule: "*/6 * * * *"
     command: ["/app/spamooor"]
     args:
       - "--privkey"
@@ -22,9 +22,9 @@ jobs:
       - "--max-wallets"
       - "3"
       - "--throughput"
-      - "60"
+      - "20"
       - "--max-pending"
-      - "60"
+      - "20"
       - "--count"
       - "600"
       - "--timeout"
@@ -60,9 +60,9 @@ jobs:
       - "--max-wallets"
       - "3"
       - "--throughput"
-      - "60"
+      - "20"
       - "--max-pending"
-      - "60"
+      - "20"
       - "--count"
       - "600"
       - "--timeout"
