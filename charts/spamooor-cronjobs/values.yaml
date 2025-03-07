@@ -20,7 +20,7 @@ jobs:
       - "https://rpc.flame.dawn-1.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "erctx"
       - "--max-wallets"
-      - "3"
+      - "10"
       - "--throughput"
       - "10"
       - "--max-pending"
@@ -58,13 +58,13 @@ jobs:
       - "https://rpc.flame.dawn-1.astria.org"  # Alternatively: <service-name>.<namespace>.svc.cluster.local:<service-port>
       - "eoatx"
       - "--max-wallets"
-      - "10"
+      - "50"
       - "--throughput"
-      - "10"
+      - "50"
       - "--max-pending"
-      - "10"
+      - "50"
       - "--count"
-      - "300"
+      - "500"
       - "--timeout"
       - "120"
     resources:
